@@ -18,13 +18,6 @@
 #3: Create proper images/backgrounds
 #4: Add levels
 
-#IDEA:
-#
-#self.spell = 0
-#self.spells = [self.__spell1,self.__shoot]
-#attack(self,spell,*args):
-#	self.spells[spell](5)
-
 import pygame,sys,random,os
 from pygame.locals import *
 
@@ -39,6 +32,7 @@ SCREEN_SIZE = 	(640,480)
 OVERSIZE =		(SCREEN_SIZE[0]-200,SCREEN_SIZE[1]-50)
 OVERLAX = 		OVERSIZE[0]
 OVERLAY =		OVERSIZE[1]
+HEALTH_BAR = 	OVERLAX-30
 OVERPOS = 		(20,20)
 START_POS_2 = 	((OVERLAX-1)-pygame.image.load("player.png").get_width(),1) #<-- makes sure the image doesn't start offscreen
 START_POS_1 = 	(1,1)
@@ -88,8 +82,8 @@ class Spritey(pygame.sprite.Sprite):
 		self.rect.y += speed[1]
 
 class Player(Spritey):
-	def __init__(self,x,y,num,maxs,sprite):
-		Spritey.__init__(self,x,y,num)
+	def __init__(self,x,y,num,maxs,sprite,life):
+		Spritey.__init__(self,x,y,num,life=life)
 		self.power = 	0
 		self.graze = 	0
 		self.power = 	1
@@ -288,10 +282,12 @@ class boss(Spritey):
 				bossBullet.add(b)
 
 	def dispLife(self):
-		start = (5*boss.lives,5)
-		end = ((5*boss.lives)+(boss.life/2),5)
-		# end = ((5*boss.lives)+(boss.life/(boss.life/OVERLAX)),5)
-		# end = (start[0] + (OVERLAX-(boss.life/OVERLAX)),5)
+		start = (5*self.lives,5)
+		# end = ((5*self.lives)+(self.life/2),5)
+		# end = ((5*self.lives)+(self.life/(self.life/OVERLAX)),5)
+		# end = (start[0] + (OVERLAX-(self.life/OVERLAX)),5)
+		percent = float(self.life)/float(self.maxLife)
+		end = (start[0] + float(HEALTH_BAR*percent),5)
 
 		pygame.draw.line(overlay,BLUE,start,end,3) #Boss health bar
 
@@ -501,7 +497,7 @@ screen.blit(overlay,OVERPOS)
 
 posx = (overlay.get_width()/2)-5
 
-player = 		Player(x,y,[posx,overlay.get_height()-5],speed,"player.png")
+player = 		Player(x,y,[posx,overlay.get_height()-5],speed,"player.png",2)
 boss =			dot_boss(x,y,[posx,40],life=1000,lives=2,speed=[-2,0])
 
 playerBullet = 	pygame.sprite.Group()

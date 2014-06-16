@@ -18,6 +18,13 @@
 #3: Create proper images/backgrounds
 #4: Add levels
 
+#IDEA:
+#
+#self.spell = 0
+#self.spells = [self.__spell1,self.__shoot]
+#attack(self,spell,*args):
+#	self.spells[spell](5)
+
 import pygame,sys,random,os
 from pygame.locals import *
 
@@ -245,6 +252,10 @@ class boss(Spritey):
 		Spritey.__init__(self,x,y,num,life=life)
 		self.lives = lives
 
+		self.spell = 1
+
+		self.spells = [self.shoot]
+
 		self.image = pygame.image.load(img)
 
 		self.rect = self.image.get_rect()
@@ -286,13 +297,22 @@ class boss(Spritey):
 
 	def kill(self):
 		self.lives -= 1
+		self.spell += 1
 		clear_b(bossBullet)
 		self.setLife(-(0-self.life) + self.maxLife)
+
+	def attack(self,args=None):
+		if args == []:
+			self.spells[self.spell-1]()
+		else:
+			self.spells[self.spell-1](args)
 
 class dot_boss(boss):
 	def __init__(self,x,y,num,life,lives,speed):
 		boss.__init__(self,x,y,num,"Boss-1.png",life=life,lives=lives)
 		self.speed = speed
+
+		self.spells.append(self.spell1)
 
 	def spell1(self,speed):
 		name = fontObj.render("EX Sign: Generic Danmaku",True,BLACK)
@@ -664,8 +684,11 @@ while True:
 	for b in all_bullets.sprites(): b.update()
 
 	if not win and not lose:
-		if boss.lives != 1: boss.shoot(5)
-		else: 				boss.spell1(5)
+		# if boss.spell == 1:		boss.shoot(5)
+		# elif boss.spell == 2:	boss.spell1(5)
+		# else:					boss.shoot(5)
+
+		boss.attack(args=5)
 
 		last_time = pygame.time.get_ticks()/1000
 

@@ -278,8 +278,8 @@ class boss(Spritey):
 
 	def dispLife(self):
 		start = (5*boss.lives,5)
-		# end = ((5*boss.lives)+(boss.life*0.75),5)
-		end = ((5*boss.lives)+(boss.life/(boss.life/OVERLAX)),5)
+		end = ((5*boss.lives)+(boss.life/2),5)
+		# end = ((5*boss.lives)+(boss.life/(boss.life/OVERLAX)),5)
 		# end = (start[0] + (OVERLAX-(boss.life/OVERLAX)),5)
 
 		pygame.draw.line(overlay,BLUE,start,end,3) #Boss health bar

@@ -13,10 +13,11 @@
 'Add point system' 														#Partially Complete (HI-Score not done)
 'Add grazing mechanics' 												#Partially Complete (HI-Score not done)
 
-#1: Add power up items and point items
-#2: Add music/sound effects
-#3: Create proper images/backgrounds
-#4: Add levels
+'Add power up items and point items'									#INCOMPLETE
+'Add music/sound effects'												#INCOMPLETE
+'Create proper images/backgrounds'										#INCOMPLETE
+'Add levels'															#INCOMPLETE
+'Have characters talk (sprite cutins)'									#INCOMPLETE
 
 import pygame,sys,random,os
 from pygame.locals import *

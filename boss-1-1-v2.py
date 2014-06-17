@@ -30,7 +30,7 @@ WHITE = (255,255,255)
 
 IMG = 			('img-','.png')
 SCREEN_SIZE = 	(640,480)
-OVERSIZE =		(SCREEN_SIZE[0]-200,SCREEN_SIZE[1]-50)
+OVERSIZE =		(SCREEN_SIZE[0]-300,SCREEN_SIZE[1]-50)
 OVERLAX = 		OVERSIZE[0]
 OVERLAY =		OVERSIZE[1]
 HEALTH_BAR = 	OVERLAX-30
@@ -377,7 +377,7 @@ def offscreen(group):
 			all_bullets.remove(b)
 			delete = True
 
-		if b.rect.y >= OVERLAX:
+		if b.rect.y >= OVERLAY:
 			group.remove(b)
 			all_bullets.remove(b)
 			delete = True

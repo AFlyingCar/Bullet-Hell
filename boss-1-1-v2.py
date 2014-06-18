@@ -4,20 +4,24 @@
 #Boss battle, using all of the pygame components I've learned up till this point.
 
 #TO-DO LIST:
-'Fix broken bullet movement (Boss spell-card)' 							#DONE
-'Turn game into a "game-overlay"' 										#DONE
-'Fix right border of game-overlay'										#DONE
-'Make player invincible after being hit (for a short time)' 			#DONE
-'Add information on the side (player health, player bombs, etc.)'		#DONE
+'Fix broken bullet movement (Boss spell-card)' 							#COMPLETE
+'Turn game into a "game-overlay"' 										#COMPLETE
+'Fix right border of game-overlay'										#COMPLETE
+'Make player invincible after being hit (for a short time)' 			#COMPLETE
+'Add information on the side (player health, player bombs, etc.)'		#COMPLETE
+'Symbols for player lives and player bombs'								#COMPLETE
 
-'Add point system' 														#Partially Complete (HI-Score not done)
-'Add grazing mechanics' 												#Partially Complete (HI-Score not done)
+'Add grazing mechanics' 												#Nearly Complete (Still grazing when hit)
+
+'Add point system' 														#Partially Complete (HI-Score not done, power up items not impletmented)
 
 'Add power up items and point items'									#INCOMPLETE
 'Add music/sound effects'												#INCOMPLETE
 'Create proper images/backgrounds'										#INCOMPLETE
 'Add levels'															#INCOMPLETE
 'Have characters talk (sprite cutins)'									#INCOMPLETE
+'More bullet types'														#INCOMPLETE
+'Bullet Patterns'														#INCOMPLETE
 
 import pygame,sys,random,os
 from pygame.locals import *
@@ -40,6 +44,8 @@ START_POS_1 = 	(1,1)
 DIRECTION1 = 	[0,0] #boss movement
 FPS = 			50
 S_BKG = 		pygame.image.load("s_bkg".join(IMG))
+LIFE_IMG = 		pygame.image.load("79".join(IMG))
+BOMB_IMG = 		pygame.image.load("78".join(IMG))
 
 HI = 0 #HI-Score
 
@@ -86,9 +92,10 @@ class Player(Spritey):
 	def __init__(self,x,y,num,maxs,sprite,life):
 		Spritey.__init__(self,x,y,num,life=life)
 		self.power = 	0
-		self.graze = 	0
+		self.grazep = 	0
 		self.power = 	1
 		self.maxBombs = 4
+		self.maxLife = 	10
 		self.maxPower = 300
 
 		self.bombs = self.maxBombs
@@ -154,6 +161,8 @@ class Player(Spritey):
 	 	self.setPos([posx,overlay.get_height()-5])
 	 	self.death_time = float(pygame.time.get_ticks())/1000
 
+	 	playSound('playerdeath.ogg')
+
 	def shoot(self):
 		bullet_list = []
 
@@ -206,7 +215,13 @@ class Player(Spritey):
 
 		playerBullet.add(bullet_list)
 
-	def graze(self): pass
+	def graze(self):
+		for i in bossBullet.sprites():
+			if i.gRect.colliderect(self.rect) and not i.rect.colliderect(self.rect):
+				self.grazep += 1
+				return 100
+
+		return 0
 
 class bullet(Spritey):
 	def __init__(self,x,y,num,img,speed,playerb = False):
@@ -229,12 +244,16 @@ class bullet(Spritey):
 		self.rect.y = self.pos[1]
 		self.speed = speed
 
+		self.gRect = pygame.Rect((0,0),self.sprite.get_size())
+
 	def drawSprite(self):
 		# pos = (self.rect.x-self.sprite.get_width()/2,self.rect.y-self.sprite.get_height()/2)
 
 		pos = surf_center(self.sprite,self.image)
 		pos[0] = self.rect.x - pos[0]
 		pos[1] = self.rect.y - pos[1]
+
+		self.gRect = pygame.Rect(pos,self.sprite.get_size())
 
 		overlay.blit(self.sprite,pos)
 
@@ -431,21 +450,40 @@ def updateScreen(BKG):
 
 def infoPrint():
 	new_info = []
-	n = [OVERPOS[0] + 10 + OVERLAX, 50]
+	n = (OVERPOS[0] + 10 + OVERLAX, 50) #Y position of information
 
 	for i in def_info:
 		loc = def_info.index(i)
+
 		x = i + str(info[loc])
-		new_info.append(fontObj.render(x,True,WHITE))
+		m = fontObj.render(x,True,WHITE)
+
+		if i == "Player":
+			ppos = list(n)
+			ppos[0] += m.get_width() + 10
+			ploc = loc
+		elif i == "Bomb":
+			bpos = list(n)
+			bpos[0] += m.get_width() + 10
+			bloc = loc
+
+		new_info.append(m)
 
 	for i in new_info:
 		screen.blit(i,n)
+		if new_info.index(i) == ploc:
+			ppos[1] = n[1]
+		elif new_info.index(i) == bloc:
+			bpos[1] = n[1]
 
-		n[1] += new_info[1].get_height() + 10
+		n = (n[0],n[1]+new_info[1].get_height() + 10)
 
 	x = "POWER: " + str(player.getPower())
 	i = fontObj.render(x,True,WHITE)
 	screen.blit(i,n)
+
+	symbol(player.life,LIFE_IMG,ppos)
+	symbol(player.bombs,BOMB_IMG,bpos)
 
 def fpsPrint():
 	x = 	str(fps.get_fps())[:5] + " fps"
@@ -454,7 +492,27 @@ def fpsPrint():
 
 	screen.blit(disp,pos)
 
-def playSound(filename): pass
+def playSound(filename):
+	loadSound(filename)
+
+def loadSound(filename):
+	pass
+
+def symbol(integer,img,pos):
+	size = list(img.get_size())
+	overlay.blit(img,(0,0))
+
+	size[0] += 5
+	size[0] *= integer
+
+	ipos = img.get_width() + 5
+
+	x = pygame.Surface(size,pygame.SRCALPHA,32)
+
+	for i in range(integer):
+		x.blit(img,((ipos*i),0))
+
+	screen.blit(x,pos)
 
 speed = 		int(raw_input("Max speed: "))
 direction2 = 	[0,0]
@@ -479,8 +537,8 @@ r_move = False
 
 def_info = ["HI-Score: ",
 		"Score: ",
-		"Player: ",
-		"Bomb: ",
+		"Player",
+		"Bomb",
 		"Graze: "]
 
 pygame.init()
@@ -706,12 +764,14 @@ while True:
 	#display boss health bar
 	boss.dispLife()
 
+	score += player.graze()
+
 	fps.tick(FPS)
 	info = [HI,
 			score,
-			player.life,
-			player.bombs,
-			player.graze]
+			"",
+			"",
+			player.grazep]
 
 	updateScreen(S_BKG)
 

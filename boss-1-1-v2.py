@@ -26,6 +26,13 @@
 import pygame,sys,random,os
 from pygame.locals import *
 
+def loadImage(filename):
+	loc = os.path.join(os.getcwd(),"Images",filename)
+
+	pic = pygame.image.load(loc)
+
+	return pic
+
 BLACK = (0,0,0)
 RED = 	(255,0,0)
 BLUE = 	(0,0,255)
@@ -38,14 +45,14 @@ OVERSIZE =		(SCREEN_SIZE[0]-300,SCREEN_SIZE[1]-50)
 OVERLAX = 		OVERSIZE[0]
 OVERLAY =		OVERSIZE[1]
 HEALTH_BAR = 	OVERLAX-30
-OVERPOS = 		(20,20)
-START_POS_2 = 	((OVERLAX-1)-pygame.image.load("player.png").get_width(),1) #<-- makes sure the image doesn't start offscreen
+OVERPOS = 		(10,20)
+START_POS_2 = 	((OVERLAX-1)-loadImage("player.png").get_width(),1) #<-- makes sure the image doesn't start offscreen
 START_POS_1 = 	(1,1)
 DIRECTION1 = 	[0,0] #boss movement
 FPS = 			50
-S_BKG = 		pygame.image.load("s_bkg".join(IMG))
-LIFE_IMG = 		pygame.image.load("79".join(IMG))
-BOMB_IMG = 		pygame.image.load("78".join(IMG))
+S_BKG = 		loadImage("s_bkg".join(IMG))
+LIFE_IMG = 		loadImage("79".join(IMG))
+BOMB_IMG = 		loadImage("78".join(IMG))
 
 HI = 0 #HI-Score
 
@@ -107,7 +114,7 @@ class Player(Spritey):
 		self.focus = 	maxs/2
 		self.speed = 	self.default
 		
-		self.sprite = 	pygame.image.load(sprite)
+		self.sprite = 	loadImage(sprite)
 
 		self.death_time = 0
 
@@ -227,7 +234,7 @@ class bullet(Spritey):
 	def __init__(self,x,y,num,img,speed,playerb = False):
 		Spritey.__init__(self,x,y,num)
 
-		self.sprite = pygame.image.load(img)
+		self.sprite = loadImage(img)
 
 		size = [int(self.sprite.get_width()/2)-5,int(self.sprite.get_height()/2)-5]
 
@@ -270,7 +277,7 @@ class boss(Spritey):
 
 		self.spells = [self.shoot]
 
-		self.image = pygame.image.load(img)
+		self.image = loadImage(img)
 
 		self.rect = self.image.get_rect()
 		self.rect.x = self.pos[0]
@@ -284,7 +291,7 @@ class boss(Spritey):
 		#Fire a bullet every second
 		if pygame.time.get_ticks()/1000 - last_time >= 1:
 			for i in range(atak):
-				start = surf_center(self.image,pygame.image.load('img-77.png'))
+				start = surf_center(self.image,loadImage('img-77.png'))
 				start[0] += self.rect.x
 				start[1] += self.rect.y
 
@@ -379,7 +386,7 @@ class s_laser(Spritey):
 	def __init__(self,x,y,num,time):
 		Spritey.__init__(self,x,y,num,life=time)
 		self.life = time
-		self.image = pygame.image.load('77'.join(IMG))
+		self.image = loadImage('77'.join(IMG))
 
 def offscreen(group):
 	#For bullets only
@@ -493,10 +500,11 @@ def fpsPrint():
 	screen.blit(disp,pos)
 
 def playSound(filename):
-	loadSound(filename)
+	sound = loadSound(filename)
 
 def loadSound(filename):
-	pass
+	loc = os.path.join(os.getcwd(),"Sound",filename)
+
 
 def symbol(integer,img,pos):
 	size = list(img.get_size())
@@ -546,7 +554,7 @@ pygame.init()
 fps = 		pygame.time.Clock()
 overlay = 	pygame.Surface(OVERSIZE)
 screen = 	pygame.display.set_mode(SCREEN_SIZE)
-fontObj = 	pygame.font.Font('THSpatial.ttf',29)
+fontObj = 	pygame.font.Font(os.path.join(os.path.abspath(os.getcwd()),'Fonts','THSpatial.ttf'),29)
 last_time = 0
 
 pygame.display.set_caption('Dot Boss Battle')
@@ -756,7 +764,7 @@ while True:
 		i.drawSprite()
 
 	for l in range(boss.lives-1):
-		#overlay all health bars
+		#display all health bars
 		pygame.draw.line(overlay,BLUE,(5*l,5),(5+(5*l),5),3)
 
 	for m in messages: overlay.blit(m,messages[m])

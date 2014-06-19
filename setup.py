@@ -3,7 +3,7 @@
 import sys
 from cx_Freeze import setup, Executable
 
-includes = ['Boss-1.png','img-75.png','img-76.png','img-77.png','img-78.png','img-79.png','img-s_bkg.png','player.png','THSpatial.ttf']
+includes = ['Images\\','Fonts\\']
 packages = ["os","pygame","pygame.locals","random","sys"]
 excludes = ["tkinter"]
 

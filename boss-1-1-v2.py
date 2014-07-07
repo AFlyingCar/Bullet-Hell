@@ -10,22 +10,24 @@
 'Make player invincible after being hit (for a short time)' 			#COMPLETE
 'Add information on the side (player health, player bombs, etc.)'		#COMPLETE
 'Symbols for player lives and player bombs'								#COMPLETE
+'Add music/sound effects'												#COMPLETE
+'Add power up items and point items'									#COMPLETE
 
 'Add grazing mechanics' 												#Nearly Complete (Still grazing when hit)
 
 'Add point system' 														#Partially Complete (HI-Score not done, power up items not impletmented)
 
-'Add power up items and point items'									#INCOMPLETE
-'Add music/sound effects'												#INCOMPLETE
+'Have characters talk (sprite cutins)'									#NOT IMPLEMENTED
+
 'Create proper images/backgrounds'										#INCOMPLETE
 'Add levels'															#INCOMPLETE
-'Have characters talk (sprite cutins)'									#INCOMPLETE
 'More bullet types'														#INCOMPLETE
 'Bullet Patterns'														#INCOMPLETE
 
 import pygame,sys,random,os
 from pygame.locals import *
 
+######Load images from ./Images and return a blank Surface if the image couldn't be found
 def loadImage(filename):
 	loc = os.path.join(os.getcwd(),"Images",filename)
 
@@ -40,6 +42,8 @@ def loadImage(filename):
 		pic = pygame.Surface((10,10))
 		return pic
 
+######Load sounds from ./Sound and return an error if the file was not found,
+###### or if pygame.mixer was not initialized
 def loadSound(filename):
 	path = os.path.join(os.getcwd(),"Sound",filename)
 
@@ -70,7 +74,6 @@ def loadSound(filename):
 BLACK = (0,0,0)
 RED = 	(255,0,0)
 BLUE = 	(0,0,255)
-CLEAR = (0,0,0,0)
 WHITE = (255,255,255)
 
 IMG = 			('img-','.png')
@@ -104,6 +107,7 @@ P_DEATH_S = 	loadSound("playerdeath.ogg")
 PICKUP_S = 		loadSound("pickup.ogg")
 
 class Spritey(pygame.sprite.Sprite):
+	'''Sprite class that defines some basic methods'''
 	def __init__(self,x,y,num,life=3):
 		pygame.sprite.Sprite.__init__(self)
 
@@ -114,7 +118,6 @@ class Spritey(pygame.sprite.Sprite):
 		print self.pos
 
 		self.image = pygame.Surface((10,10),pygame.SRCALPHA,32)
-		# self.image.fill(CLEAR)
 
 		######Rectangular hitbox of sprite######
 		self.rect = self.image.get_rect()
@@ -136,6 +139,15 @@ class Spritey(pygame.sprite.Sprite):
 		self.pos = pos
 		self.rect.x = self.pos[0]
 		self.rect.y = self.pos[1]
+
+	def drawSprite(self):
+		pos = surf_center(self.sprite,self.image)
+		pos[0] = self.rect.x - pos[0]
+		pos[1] = self.rect.y - pos[1]
+
+		self.gRect = pygame.Rect(pos,self.sprite.get_size())
+
+		overlay.blit(self.sprite,pos)
 
 	def update(self,speed):
 		######Generic sprite position updater######
@@ -163,7 +175,8 @@ class Player(Spritey):
 		
 		self.sprite = 	loadImage(sprite)
 
-		self.death_time = 0
+		self.death_time = 	0
+		self.score = 		0
 
 	def update(self):
 		player.rect.x += direction2[0]
@@ -195,10 +208,6 @@ class Player(Spritey):
 			self.speed = self.default
 			del self.image
 			self.image = pygame.Surface((10,10),pygame.SRCALPHA,32)
-
-	def drawSprite(self):
-		pos = (self.rect.x-self.sprite.get_width()/2,self.rect.y-self.sprite.get_height()/2)
-		overlay.blit(self.sprite,pos)
 
 	def getPower(self):
 		if self.power >= self.maxPower: return "MAX"
@@ -270,10 +279,20 @@ class Player(Spritey):
 		playerBullet.add(bullet_list)
 
 	def graze(self):
+		# for i in bossBullet.sprites():
+		# 	if i.gRect.colliderect(self.rect) and not i.rect.colliderect(self.rect):
+		# 		self.grazep += 1
+		# 		return 100
+
+		# return 0
+
 		for i in bossBullet.sprites():
-			if i.gRect.colliderect(self.rect) and not i.rect.colliderect(self.rect):
+			if i.gRect.colliderect(self.rect) and not i.rect.colliderect(self.rect) and not i.grazed:
+				#For some reason, graze points are increasing by two
 				self.grazep += 1
-				return 100
+				# self.grazep -= 1
+				i.grazed = True
+				self.score += 100
 
 		return 0
 
@@ -302,16 +321,7 @@ class bullet(Spritey):
 
 		self.playerb = playerb
 
-	def drawSprite(self):
-		# pos = (self.rect.x-self.sprite.get_width()/2,self.rect.y-self.sprite.get_height()/2)
-
-		pos = surf_center(self.sprite,self.image)
-		pos[0] = self.rect.x - pos[0]
-		pos[1] = self.rect.y - pos[1]
-
-		self.gRect = pygame.Rect(pos,self.sprite.get_size())
-
-		overlay.blit(self.sprite,pos)
+		self.grazed = False
 
 	def update(self):
 		self.rect.x += self.speed[0]
@@ -337,6 +347,10 @@ class boss(Spritey):
 		self.last_time = pygame.time.get_ticks()
 
 		self.pwr = {'p':0}
+
+		self.clife = 0
+
+		self.lifes = [self.maxLife]
 
 	def shoot(self,atak):
 		#Fire a bullet every second
@@ -370,6 +384,10 @@ class boss(Spritey):
 		pygame.draw.line(overlay,BLUE,start,end,3) #Boss health bar
 
 	def kill(self):
+		self.clife += 1
+
+		self.maxLife = self.lifes[self.clife]
+
 		self.lives -= 1
 		self.spell += 1
 		clear_b(bossBullet)
@@ -395,6 +413,8 @@ class boss(Spritey):
 			else:
 				print "ItemError: Invalid token '" + i + "'"
 
+		return True
+
 	def attack(self,args=None):
 		if args == []:
 			self.spells[self.spell-1]()
@@ -410,6 +430,8 @@ class dot_boss(boss):
 
 		self.pwr = {'p':0,'p':1,'s':0,'p':0}
 
+		self.lifes.append(1500)
+
 	def spell1(self,speed):
 		self.pwr = {'p':0,'p':1,'s':0,'p':0,'p':1,'l':0}
 
@@ -418,8 +440,6 @@ class dot_boss(boss):
 		messages[name] =	 pos
 
 		self.speed = 		[0,0]
-		self.life = 		1500
-		self.maxLife =	 	1500
 
 		newPos = [surf_center(overlay,self.image)[0],10]
 
@@ -661,11 +681,12 @@ def playSound(filename):
 		if s == "err":
 			print "An error occurred!"
 
+		elif type(s) is pygame.mixer.Sound:
+			s.play()
+
 		else:
 			print type(s)
 			print "Error: Generic Error"
-		
-		s.play()
 
 	else:
 		print "TypeError:", type(filename), "is not valid."
@@ -743,10 +764,12 @@ ctrl_hold = 	False
 bomb_fin = 		True
 x = 			20
 y = 			25
-score = 		0
+# score = 		0
 cooldown = 		0
 messages = 		{} #{<fontObj>:<pos>}
 bomb_name = 	""
+
+playerbomb = False
 
 d_move = False
 u_move = False
@@ -776,6 +799,8 @@ screen.blit(overlay,OVERPOS)
 posx = (overlay.get_width()/2)-5
 
 player = 		Player(x,y,[posx,overlay.get_height()-5],speed,"player.png",2)
+
+#Set the boss's life to any positive integer, but I'm leaving it at 100 right now for testing
 boss =			dot_boss(x,y,[posx,40],life=100,lives=2,speed=[-2,0])
 
 playerBullet = 	pygame.sprite.Group()
@@ -877,14 +902,16 @@ while True:
 	######Sprite collision detection######
 	if (pygame.sprite.spritecollide(player,bossGroup,False) or pygame.sprite.spritecollide(player,bossBullet,True)) and not collide:
 	 	collide = True
-	 	if not player.god: player.kill()
+	 	if not player.god and not player.bombing: player.kill()
 
 	if pygame.sprite.spritecollide(boss,playerBullet,True):
 		boss.setLife(-1)
-		score += 10
+		# score += 10
+		player.score += 10
 	if pygame.sprite.spritecollide(boss,bombBullet,False):
 		boss.setLife(-5)
-		score += 10
+		# score += 10
+		player.score += 10
 
 	for i in powerGroup.sprites():
 		if player.getPower() != "MAX":
@@ -899,7 +926,8 @@ while True:
 		if pygame.sprite.spritecollide(i,playerGroup,False):
 			itemGroup.remove(i)
 			scoreGroup.remove(i)
-			score += i.sscore
+			# score += i.sscore
+			player.score += i.sscore
 
 			del i
 
@@ -1025,11 +1053,13 @@ while True:
 	#display boss health bar
 	boss.dispLife()
 
-	score += player.graze()
+	# score += player.graze()
+	player.graze()
 
 	fps.tick(FPS)
 	info = [HI,
-			score,
+			# score,
+			player.score,
 			"",
 			"",
 			player.grazep]

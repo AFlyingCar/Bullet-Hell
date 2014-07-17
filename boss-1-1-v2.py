@@ -18,95 +18,29 @@
 
 'Add point system' 														#Partially Complete (HI-Score not done)
 
-'Have characters talk (sprite cutins)'									#NOT IMPLEMENTED
+'Modularize code and split code into separate files'					#Partially Complete (Haven't finished modularizing sprites)
+
+'Have characters "talk" (sprite cutins)'								#NOT IMPLEMENTED
 
 'Create proper images/backgrounds'										#INCOMPLETE
 'Add levels'															#INCOMPLETE
 'More bullet types'														#INCOMPLETE
 'Bullet Patterns'														#INCOMPLETE
 'Fix music delay'														#INCOMPLETE
+'Fix Player bomb name'													#INCOMPLETE (Text doesn't disappear once the bomb ends)
 
 import pygame,sys,random,os
 from pygame.locals import *
+from bin.lib.basic import *
 
-######Load images from ./Images and return a blank Surface if the image couldn't be found
-def loadImage(filename):
-	loc = os.path.join(os.getcwd(),"Images",filename)
+#Haven't finished modularizing this yet.
+# from bin.lib.sprites import *
 
-	if os.path.exists(loc):
-		pic = pygame.image.load(loc)
-		return pic
+#Keep constants in a separate folder to make the code less cluttered
+from bin.lib.constants import *
 
-	else:
-		print "ImageError: Could not find", filename, "in \\Images!"
-		print "Loading blank image..."
-
-		pic = pygame.Surface((10,10))
-		return pic
-
-######Load sounds from ./Sound and return an error if the file was not found,
-###### or if pygame.mixer was not initialized
-def loadSound(filename):
-	path = os.path.join(os.getcwd(),"Sound",filename)
-
-	if os.path.exists(path):
-		if pygame.mixer.get_init():
-			s = pygame.mixer.Sound(path)
-			return s
-
-		else:
-			print "Mixer not initialized!"
-
-			while True:
-				yn = raw_input("Initialize?(y/n) ")
-				if yn is 'y':
-					pygame.mixer.init()
-					break
-				elif yn is 'n':
-					print "Warning: Mixer still not initialized!"
-					print "This could result in the program failing."
-					break
-				else:
-					print "'y' or 'n' please!"
-
-	else:
-		print "SoundError: Could not find", filename, "in \\Sound!"
-		return "err"
-
-BLACK = (0,0,0)
-RED = 	(255,0,0)
-BLUE = 	(0,0,255)
-WHITE = (255,255,255)
-
-IMG = 			('img-','.png')
-SCREEN_SIZE = 	(640,480)
-OVERSIZE =		(SCREEN_SIZE[0]-300,SCREEN_SIZE[1]-50)
-OVERLAX = 		OVERSIZE[0]
-OVERLAY =		OVERSIZE[1]
-HEALTH_BAR = 	OVERLAX-30
-OVERPOS = 		(10,20)
-START_POS_2 = 	((OVERLAX-1)-loadImage("player.png").get_width(),1) #<-- makes sure the image doesn't start offscreen
-START_POS_1 = 	(1,1)
-DIRECTION1 = 	[0,0] #boss movement
 FPS = 			60
-
-HI = 0 #HI-Score, thscore.dat
-
-######Load images beforehand######
-LIFE_IMG = 		loadImage("79".join(IMG))
-BOMB_IMG = 		loadImage("78".join(IMG))
-LIFE_UP_IMG = 	loadImage("img_1-up.png")
-SCORE_IMG = 	loadImage("img_score.png")
-BOMB_UP_IMG = 	loadImage("img_bomb-up.png")
-POWER0_IMG = 	loadImage("img_power-0.png")
-POWER1_IMG = 	loadImage("img_power-1.png")
-S_BKG = 		loadImage("s_bkg".join(IMG))
-
-pygame.mixer.init()
-
-######Load sounds beforehand######
-P_DEATH_S = 	loadSound("playerdeath.ogg")
-PICKUP_S = 		loadSound("pickup.ogg")
+HI = 			0 #HI-Score, thscore.dat
 
 class Spritey(pygame.sprite.Sprite):
 	'''Sprite class that defines some basic methods'''
@@ -672,52 +606,6 @@ class Timer(object):
 	def isFinished(self):
 		return self.finished
 
-def offscreen(group):
-	#For bullets only
-	for b in group.sprites():
-		delete = False
-
-		if b.rect.x <= (0-b.image.get_width()):	
-			group.remove(b)
-			all_bullets.remove(b)
-			delete = True
-
-		if b.rect.x >= OVERLAX:
-			group.remove(b)
-			all_bullets.remove(b)
-			delete = True
-
-		if b.rect.y >= OVERLAY:
-			group.remove(b)
-			all_bullets.remove(b)
-			delete = True
-
-		if b.rect.y <= (0-b.image.get_height()):
-			group.remove(b)
-			all_bullets.remove(b)
-			delete = True
-
-		if delete: del b
-
-def clear_b(group):
-	for x in group.sprites():
-		all_bullets.remove(x)
-	group.empty()
-
-def shutdown():
-	pygame.quit()
-	sys.exit()
-
-def surf_center(surface,newSurface):
-	x = (surface.get_width()/2) - (newSurface.get_width()/2)
-	y = (surface.get_height()/2) - (newSurface.get_height()/2)
-
-	return [x,y]
-
-def reverse(binary,val):
-	if binary: 	return False
-	else:		return True
-
 def move():
 	#Change player direction based on pressed keys#
 	if r_move and not l_move: 	direction2[0] =  player.speed
@@ -735,7 +623,7 @@ def updateScreen(BKG):
 	screen.blit(overlay,OVERPOS)
 
 	infoPrint()
-	fpsPrint()
+	fpsPrint(fps,OVERSIZE,fontObj,screen)
 
 	pygame.display.update()
 
@@ -773,74 +661,8 @@ def infoPrint():
 	i = fontObj.render(x,True,WHITE)
 	screen.blit(i,n)
 
-	symbol(player.life,LIFE_IMG,ppos)
-	symbol(player.bombs,BOMB_IMG,bpos)
-
-def fpsPrint():
-	x = 	str(fps.get_fps())[:5] + " fps"
-	disp = 	fontObj.render(x,True,BLACK)
-	pos = 	[OVERLAX-disp.get_width(),OVERLAY-disp.get_height()]
-
-	screen.blit(disp,pos)
-
-def playSound(filename):
-	if type(filename) is pygame.mixer.Sound:
-		filename.play()
-
-	elif type(filename) is str:
-		s = loadSound(filename)
-
-		if s == "err":
-			print "An error occurred!"
-
-		elif type(s) is pygame.mixer.Sound:
-			s.play()
-
-		else:
-			print type(s)
-			print "Error: Generic Error"
-
-	else:
-		print "TypeError:", type(filename), "is not valid."
-
-def loadMusic(filename):
-	path = os.path.join(os.getcwd(),"Music",filename)
-
-	if pygame.mixer.music.get_busy():
-		pygame.mixer.music.fadeout(2)
-
-	if os.path.exists(path):
-		if pygame.mixer.get_init():
-			pygame.mixer.music.load(path)
-			return True
-		else:
-			print "Mixer not initialized!"
-	else:
-		print "Path:", path, "does not exist!"
-
-def playMusic(filename):
-	s = loadMusic(filename)
-
-	if s:
-		pygame.mixer.music.play(-1)
-	else:
-		print "ERROR"
-
-def symbol(integer,img,pos):
-	size = list(img.get_size())
-	overlay.blit(img,(0,0))
-
-	size[0] += 5
-	size[0] *= integer
-
-	ipos = img.get_width() + 5
-
-	x = pygame.Surface(size,pygame.SRCALPHA,32)
-
-	for i in range(integer):
-		x.blit(img,((ipos*i),0))
-
-	screen.blit(x,pos)
+	symbol(player.life,LIFE_IMG,ppos,screen)
+	symbol(player.bombs,BOMB_IMG,bpos,screen)
 
 def cutin(bosss,players,stage):
 	'''bosss and players are cutin images.'''
@@ -864,10 +686,6 @@ def cutin(bosss,players,stage):
 	box = pygame.Surface((OVERLAX-20,OVERLAY-200))
 
 	return ([True,box,text,bosst,playert,pygame.time.get_ticks()])
-
-def dispText(text,surf,pos,color=BLACK):
-	f = fontObj.render(text,True,color)
-	surf.blit(f,pos)
 
 speed = 		int(raw_input("Max speed: "))
 direction2 = 	[0,0]
@@ -1132,11 +950,9 @@ while True:
 	boss.update()
 	player.update()
 
-	offscreen(playerBullet)
-	offscreen(bossBullet)
-	offscreen(bombBullet)
-	offscreen(powerGroup)
-	offscreen(scoreGroup)
+	offscreen(all_bullets,OVERSIZE)
+	offscreen(powerGroup,OVERSIZE)
+	offscreen(scoreGroup,OVERSIZE)
 
 	if shoot and not lose and not player.playerbomb: player.shoot()
 

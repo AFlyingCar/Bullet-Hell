@@ -16,7 +16,7 @@
 
 'Add grazing mechanics' 												#Nearly Complete (Still grazing when hit)
 'Add spell-timer'														#Nearly Complete (Timer runs a bit slow for some reason: probably FPS)
-'Add logging wherever possible'											#Nearly Complete (Will always be nearly complete
+'Add logging wherever possible'											#Nearly Complete (Will always be nearly complete)
 
 'Add point system' 														#Partially Complete (HI-Score and saving score not done)
 
@@ -109,7 +109,7 @@ class Player(Spritey):
 			for b in range(5):
 				x1 = random.randint(boss.rect.x-100,boss.rect.x+100)
 
-				b = bullet((x1,0),'76'.join(IMG),(0,5),playerb=True)
+				b = bullet((x1,0),BULL3,(0,5),playerb=True)
 				bombBullet.add(b)
 
 			self.bombing = True
@@ -172,10 +172,10 @@ class Player(Spritey):
 			x3 = self.rect.x + 10
 			x4 = self.rect.x - 10
 
-			b = bullet((x1,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
-			b2 = bullet((x2,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
-			b3 = bullet((x3,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
-			b4 = bullet((x4,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
+			b = bullet((x1,self.rect.y-30),BULL1,(0,-30),playerb=True)
+			b2 = bullet((x2,self.rect.y-30),BULL1,(0,-30),playerb=True)
+			b3 = bullet((x3,self.rect.y-30),BULL1,(0,-30),playerb=True)
+			b4 = bullet((x4,self.rect.y-30),BULL1,(0,-30),playerb=True)
 
 
 			bullet_list.append(b)
@@ -188,9 +188,9 @@ class Player(Spritey):
 			x2 = self.rect.x + (self.sprite.get_width()/2)
 			x3 = self.rect.x
 
-			b = bullet((x1,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
-			b2 = bullet((x2,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
-			b3 = bullet((x3,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
+			b = bullet((x1,self.rect.y-30),BULL1,(0,-30),playerb=True)
+			b2 = bullet((x2,self.rect.y-30),BULL1,(0,-30),playerb=True)
+			b3 = bullet((x3,self.rect.y-30),BULL1,(0,-30),playerb=True)
 
 			bullet_list.append(b)
 			bullet_list.append(b2)
@@ -200,8 +200,8 @@ class Player(Spritey):
 			x1 = self.rect.x - (self.sprite.get_width()/2)
 			x2 = self.rect.x + (self.sprite.get_width()/2)
 			
-			b = bullet((x1,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
-			b2 = bullet((x2,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
+			b = bullet((x1,self.rect.y-30),BULL1,(0,-30),playerb=True)
+			b2 = bullet((x2,self.rect.y-30),BULL1,(0,-30),playerb=True)
 			
 			bullet_list.append(b)
 			bullet_list.append(b2)
@@ -209,7 +209,7 @@ class Player(Spritey):
 		else:
 			x1 = self.rect.x
 
-			b = bullet((x1,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
+			b = bullet((x1,self.rect.y-30),BULL1,(0,-30),playerb=True)
 			
 			bullet_list.append(b)
 

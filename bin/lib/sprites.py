@@ -359,20 +359,20 @@ class boss(Spritey):
 			self.last_time = pygame.time.get_ticks()/1000
 			
 			for i in range(atak):
-				start = surf_center(self.image,loadImage('img-77.png'))
+				start = surf_center(self.image,BULL2)
 				start[0] += self.rect.x
 				start[1] += self.rect.y
 
 				if i is 1:
-					b = bullet(start,'img-77.png',(0,5))
+					b = bullet(start,BULL2,(0,5))
 				elif i is 2:
-					b = bullet(start,'img-77.png',(0,-5))
+					b = bullet(start,BULL2,(0,-5))
 				elif i is 3:
-					b = bullet(start,'img-77.png',(-5,0))
+					b = bullet(start,BULL2,(-5,0))
 				elif i is 4:
-					b = bullet(start,'img-77.png',(5,0))
+					b = bullet(start,BULL2,(5,0))
 				else:
-					b = bullet(start,'img-77.png',(0,5))
+					b = bullet(start,BULL2,(0,5))
 
 				group.add(b)
 
@@ -405,7 +405,8 @@ class boss(Spritey):
 				# bombupGroup.add(b)
 
 			else:
-				print "ItemError: Invalid token '" + i + "'"
+				logging("Invalid item token '" + i + "'", "err")
+				# print "ItemError: Invalid token '" + i + "'"
 
 			dropList.append(d)
 
@@ -476,8 +477,8 @@ class dot_boss(boss):
 		ctime = float(pygame.time.get_ticks())/1000 - float(self.last_time)/1000
 
 		if ctime >= 0.3:
-			b2 = bullet(spawn2,'img-77.png',(5,5))
-			b = bullet(spawn3,'img-77.png',(-5,5))
+			b2 = bullet(spawn2,BULL2,(5,5))
+			b = bullet(spawn3,BULL2,(-5,5))
 
 			self.last_time = pygame.time.get_ticks()
 
@@ -556,7 +557,8 @@ class Powerup(Item):
 	def __init__(self,x,y,num,size):
 
 		if size < 0 or size > 1:
-			print "Incorrect size!"
+			logging("Incorrect size for Powerup item!")
+			# print "Incorrect size!"
 			return None
 
 		self.pscore = (size*10)
@@ -585,10 +587,3 @@ class Bombup(Item):
 		playSound("bombup.ogg")
 
 nuclear = u'\u2622'
-
-if __name__ == "__main__":
-	import pygame
-	from pygame.locals import *
-
-	x = 20
-	y = 25

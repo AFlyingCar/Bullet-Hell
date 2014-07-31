@@ -6,8 +6,6 @@
 import pygame,os,sys
 from pygame.locals import *
 from color import *
-# from datetime.datetime import now
-from datetime import datetime
 from debugger import *
 
 ######Load images from ./Images and return a blank Surface if the image couldn't be found
@@ -73,14 +71,10 @@ def playSound(filename):
 		s = loadSound(filename)
 
 		if s == "err":
-			print "An error occurred!"
+			pass
 
-		elif type(s) is pygame.mixer.Sound:
+		if type(s) is pygame.mixer.Sound:
 			s.play()
-
-		else:
-			print type(s)
-			print "Error: Generic Error"
 
 	else:
 		# print "TypeError:", type(filename), "is not valid."
@@ -169,7 +163,7 @@ def shutdown():
 	logging("Ending main program", "std")
 
 	debugUnInit()
-	
+
 	sys.exit()
 
 def surf_center(surface,newSurface):

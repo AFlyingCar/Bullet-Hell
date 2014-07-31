@@ -3,7 +3,7 @@
 import sys
 from cx_Freeze import setup, Executable
 
-includes = ['Images\\','Fonts\\','Sound\\','Music\\','thcut.dat','license.txt','README.txt']
+includes = ['Images\\','Fonts\\','Sound\\','Music\\','bin\\','thcut.dat','license.txt','README.txt']
 packages = ["os","pygame","pygame.locals","random","sys"]
 excludes = ["tkinter"]
 

@@ -3,6 +3,13 @@
 #Constants
 #Holds constant variables for the game
 
+#
+# IMPORTANT NOTE
+#
+# THIS FILE MAY BE DEPRECATED IN THE FUTURE.
+# ALL OF THE CONSTANTS MAY BECOME INITIALIZED IN A SPECIAL INITIALIZER.
+
+from pygame.mixer import init
 from basic import loadImage,loadSound
 
 ########
@@ -19,13 +26,19 @@ BLUE = 	(0,0,255)
 
 IMG = 			('img-','.png')
 SCREEN_SIZE = 	(640,480)
+
+#MAX-SIZE of the game overlay
 OVERSIZE =		(SCREEN_SIZE[0]-300,SCREEN_SIZE[1]-50)
 OVERLAX = 		OVERSIZE[0]
 OVERLAY =		OVERSIZE[1]
-HEALTH_BAR = 	OVERLAX-30
+
+#Position of the game overlay
 OVERPOS = 		(10,20)
-START_POS_2 = 	((OVERLAX-1)-loadImage("player.png").get_width(),1) #<-- makes sure the image doesn't start offscreen
+
+HEALTH_BAR = 	OVERLAX-30
 START_POS_1 = 	(1,1)
+START_POS_2 = 	((OVERLAX-1)-loadImage("player.png").get_width(),1) #<-- makes sure the image doesn't start offscreen
+# print START_POS_2
 DIRECTION1 = 	[0,0] #boss movement
 
 #We load images and sounds before-hand so that less memory is used up trying to constantly reference
@@ -43,7 +56,9 @@ POWER0_IMG = 	loadImage("img_power-0.png")
 POWER1_IMG = 	loadImage("img_power-1.png")
 S_BKG = 		loadImage("s_bkg".join(IMG))
 
-# pygame.mixer.init()
+#This is to make sure that the mixer loads so that
+# loadSound doesn't ask the user for confirmation to continue
+init(frequency=22050, size=-16, buffer=500)
 
 ########
 #SOUNDS#

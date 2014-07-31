@@ -12,29 +12,39 @@
 'Symbols for player lives and player bombs'								#COMPLETE
 'Add music/sound effects'												#COMPLETE
 'Add power up items and point items'									#COMPLETE
+'Fix music delay'														#COMPLETE? (Still a small delay, but not as noticable as before)
 
 'Add grazing mechanics' 												#Nearly Complete (Still grazing when hit)
 'Add spell-timer'														#Nearly Complete (Timer runs a bit slow for some reason: probably FPS)
+'Add logging wherever possible'											#Nearly Complete (Will always be nearly complete
 
-'Add point system' 														#Partially Complete (HI-Score not done)
+'Add point system' 														#Partially Complete (HI-Score and saving score not done)
 
-'Modularize code and split code into separate files'					#Partially Complete (Haven't finished modularizing sprites)
+'Modularize code and split code into separate files'					#Partially Complete (Haven't finished modularizing sprites namely Player)
 
-'Have characters "talk" (sprite cutins)'								#NOT IMPLEMENTED
-
+'Have characters "talk" (sprite cutins)'								#INCOMPLETE
 'Create proper images/backgrounds'										#INCOMPLETE
 'Add levels'															#INCOMPLETE
 'More bullet types'														#INCOMPLETE
 'Bullet Patterns'														#INCOMPLETE
-'Fix music delay'														#INCOMPLETE
+'Make spell cards (Including player bomb) classes'						#INCOMPLETE
 'Fix Player bomb name'													#INCOMPLETE (Text doesn't disappear once the bomb ends)
+'Add menus for various things'											#INCOMPLETE
+'Add system flags'														#INCOMPLETE
+
+from bin.lib.debugger import *
+
+#Initialize the debugging engine
+# We must do this before anything else, so that other files have access to config.tmpcfg
+# This won't be necessary once the config.cfg file has been implemented
+debugInit()
 
 import pygame,sys,random,os
 from pygame.locals import *
 from bin.lib.basic import *
 
 #Haven't finished modularizing this yet.
-# from bin.lib.sprites import *
+from bin.lib.sprites import *
 
 #Keep constants in a separate folder to make the code less cluttered
 from bin.lib.constants import *
@@ -42,57 +52,9 @@ from bin.lib.constants import *
 FPS = 			60
 HI = 			0 #HI-Score, thscore.dat
 
-class Spritey(pygame.sprite.Sprite):
-	'''Sprite class that defines some basic methods'''
-	def __init__(self,x,y,num,life=3):
-		pygame.sprite.Sprite.__init__(self)
-
-		if num is 1: 	self.pos = START_POS_1
-		elif num is 0: 	self.pos = START_POS_2
-		else:			self.pos = num
-
-		print self.pos
-
-		self.image = pygame.Surface((10,10),pygame.SRCALPHA,32)
-
-		######Rectangular hitbox of sprite######
-		self.rect = self.image.get_rect()
-		self.rect.x = self.pos[0]
-		self.rect.y = self.pos[1]
-		self.life = life
-		self.start = self.pos
-
-		pygame.draw.circle(self.image,RED,(5,5),5)
-
-	def shoot(self):
-		######Generic sprite shooting######
-		b = bullet(x,y,(self.rect.x,self.rect.y-30),'75'.join(IMG),(0,-30))
-		playerBullet.add(b)
-
-	def setLife(self,life): self.life += life
-
-	def setPos(self,pos):
-		self.pos = pos
-		self.rect.x = self.pos[0]
-		self.rect.y = self.pos[1]
-
-	def drawSprite(self):
-		pos = surf_center(self.sprite,self.image)
-		pos[0] = self.rect.x - pos[0]
-		pos[1] = self.rect.y - pos[1]
-
-		self.gRect = pygame.Rect(pos,self.sprite.get_size())
-
-		overlay.blit(self.sprite,pos)
-
-	def update(self,speed):
-		######Generic sprite position updater######
-		self.rect.x += speed[0]
-		self.rect.y += speed[1]
-
 class Player(Spritey):
 	def __init__(self,x,y,num,maxs,sprite,life):
-		Spritey.__init__(self,x,y,num,life=life)
+		Spritey.__init__(self,num,life=life)
 		self.power = 	0
 		self.grazep = 	0
 		self.power = 	1
@@ -116,16 +78,16 @@ class Player(Spritey):
 
 		self.playerbomb = 	False
 
-	def update(self):
-		player.rect.x += direction2[0]
-		player.rect.y += direction2[1]
+	def update(self,direction):
+		self.rect.x += direction[0]
+		self.rect.y += direction[1]
 
 		if self.rect.x <= 0: 									self.rect.x += self.speed #LEFT
 		if self.rect.x >= (OVERLAX-self.image.get_width()): 	self.rect.x -= self.speed #RIGHT
 		if self.rect.y >= (OVERLAY-self.image.get_width()): 	self.rect.y -= self.speed #BOTTOM
 		if self.rect.y <= 0: 									self.rect.y += self.speed #TOP
 
-	def bomb(self):
+	def bomb(self,nei,nei2,nei3,nei4):
 		#5 large red orbs rain from above. Once all have hit the ground, a large white laser shoots up the middle ofthe screen.
 		name = "Origin Sign: Red Rain"
 		name = fontObj.render(name,True,BLACK)
@@ -147,7 +109,7 @@ class Player(Spritey):
 			for b in range(5):
 				x1 = random.randint(boss.rect.x-100,boss.rect.x+100)
 
-				b = bullet(x,y,(x1,0),'76'.join(IMG),(0,5),playerb=True)
+				b = bullet((x1,0),'76'.join(IMG),(0,5),playerb=True)
 				bombBullet.add(b)
 
 			self.bombing = True
@@ -201,7 +163,7 @@ class Player(Spritey):
 
 	 	playSound('playerdeath.ogg')
 
-	def shoot(self):
+	def shoot(self,group):
 		bullet_list = []
 
 		if self.power >= self.maxPower:
@@ -210,10 +172,10 @@ class Player(Spritey):
 			x3 = self.rect.x + 10
 			x4 = self.rect.x - 10
 
-			b = bullet(x,y,(x1,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
-			b2 = bullet(x,y,(x2,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
-			b3 = bullet(x,y,(x3,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
-			b4 = bullet(x,y,(x4,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
+			b = bullet((x1,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
+			b2 = bullet((x2,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
+			b3 = bullet((x3,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
+			b4 = bullet((x4,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
 
 
 			bullet_list.append(b)
@@ -226,9 +188,9 @@ class Player(Spritey):
 			x2 = self.rect.x + (self.sprite.get_width()/2)
 			x3 = self.rect.x
 
-			b = bullet(x,y,(x1,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
-			b2 = bullet(x,y,(x2,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
-			b3 = bullet(x,y,(x3,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
+			b = bullet((x1,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
+			b2 = bullet((x2,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
+			b3 = bullet((x3,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
 
 			bullet_list.append(b)
 			bullet_list.append(b2)
@@ -238,8 +200,8 @@ class Player(Spritey):
 			x1 = self.rect.x - (self.sprite.get_width()/2)
 			x2 = self.rect.x + (self.sprite.get_width()/2)
 			
-			b = bullet(x,y,(x1,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
-			b2 = bullet(x,y,(x2,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
+			b = bullet((x1,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
+			b2 = bullet((x2,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
 			
 			bullet_list.append(b)
 			bullet_list.append(b2)
@@ -247,13 +209,13 @@ class Player(Spritey):
 		else:
 			x1 = self.rect.x
 
-			b = bullet(x,y,(x1,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
+			b = bullet((x1,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
 			
 			bullet_list.append(b)
 
 		playerBullet.add(bullet_list)
 
-	def graze(self):
+	def graze(self,group):
 		# for i in bossBullet.sprites():
 		# 	if i.gRect.colliderect(self.rect) and not i.rect.colliderect(self.rect):
 		# 		self.grazep += 1
@@ -271,203 +233,29 @@ class Player(Spritey):
 
 		return 0
 
-class bullet(Spritey):
-	def __init__(self,x,y,num,img,speed,playerb=False):
-		Spritey.__init__(self,x,y,num)
+	def collect(self,item):
+		if type(item) == PointItem:
+			self.score += item.sscore
+			sound = "pickup.ogg"
 
-		self.sprite = loadImage(img)
-
-		size = [int(self.sprite.get_width()/2)-5,int(self.sprite.get_height()/2)-5]
-
-		if size[0] <= 0: size[0] = 0 + 5
-		if size[1] <= 0: size[0] = 0 + 5
-
-		if playerb: size = self.sprite.get_size()
-
-		self.image = pygame.Surface(size,pygame.SRCALPHA,32)
-		# self.image = pygame.Surface(size)
-
-		self.rect = self.image.get_rect()
-		self.rect.x = self.pos[0]
-		self.rect.y = self.pos[1]
-		self.speed = speed
-
-		self.gRect = pygame.Rect((0,0),self.sprite.get_size())
-
-		self.playerb = playerb
-
-		self.grazed = False
-
-	def update(self):
-		self.rect.x += self.speed[0]
-		self.rect.y += self.speed[1]
-
-class boss(Spritey):
-	def __init__(self,x,y,num,img,life=100,lives=1):
-		Spritey.__init__(self,x,y,num,life=life)
-		self.lives = lives
-
-		self.spell = 1
-
-		self.spells = [self.shoot]
-
-		self.image = loadImage(img)
-
-		self.rect = self.image.get_rect()
-		self.rect.x = self.pos[0]
-		self.rect.y = self.pos[1]
-
-		self.maxLife = life
-
-		self.last_time = pygame.time.get_ticks()
-
-		self.pwr = {'p':0}
-
-		self.clife = 0
-
-		self.lifes = [self.maxLife]
-
-		self.spellTimer = Timer(2500)
-
-		# self.spellTimer.startTimer()
-
-	def shoot(self,atak):
-		#Fire a bullet every second
-		self.spellTimer.timer()
-		if pygame.time.get_ticks()/1000 - last_time >= 1:
-			for i in range(atak):
-				start = surf_center(self.image,loadImage('img-77.png'))
-				start[0] += self.rect.x
-				start[1] += self.rect.y
-
-				if i is 1:
-					b = bullet(x,y,start,'img-77.png',(0,5))
-				elif i is 2:
-					b = bullet(x,y,start,'img-77.png',(0,-5))
-				elif i is 3:
-					b = bullet(x,y,start,'img-77.png',(-5,0))
-				elif i is 4:
-					b = bullet(x,y,start,'img-77.png',(5,0))
-				else:
-					b = bullet(x,y,start,'img-77.png',(0,5))
-
-				bossBullet.add(b)
-
-	def dispLife(self):
-		start = (5*self.lives,5)
-		# end = ((5*self.lives)+(self.life/2),5)
-		# end = ((5*self.lives)+(self.life/(self.life/OVERLAX)),5)
-		# end = (start[0] + (OVERLAX-(self.life/OVERLAX)),5)
-		percent = float(self.life)/float(self.maxLife)
-		end = (start[0] + float(HEALTH_BAR*percent),5)
-
-		pygame.draw.line(overlay,BLUE,start,end,3) #Boss health bar
-
-	def kill(self):
-		self.clife += 1
-
-		self.maxLife = self.lifes[self.clife]
-
-		self.lives -= 1
-		self.spell += 1
-		clear_b(bossBullet)
-		self.setLife(-(0-self.life) + self.maxLife)
-
-		for i in self.pwr:
-			newPos = (random.randint(self.rect.x-20,self.rect.x+20),self.rect.y)
-			if i == 'p':
-				p = Powerup(self.pos[0],self.pos[1],newPos,self.pwr[i])
-				powerGroup.add(p)
-
-			elif i == 's':
-				s = PointItem(self.pos[0],self.pos[1],newPos)
-				scoreGroup.add(s)
-
-			elif i == 'l':
-				l = Lifeup(self.pos[0],self.pos[1],newPos)
-				lifeGroup.add(l)
-
-			elif i == 'b':
-				b = Bombup(self.pos[0],self.pos[1],newPos)
-				bombupGroup.add(b)
-
+		elif type(item) == Powerup:
+			if self.getPower() != "MAX":
+				self.score += item.pscore
+				sound = "pickup.ogg"
 			else:
-				print "ItemError: Invalid token '" + i + "'"
+				return False
 
-		self.spellTimer.startTimer()
+		elif type(item) == Lifeup:
+			self.setLife(1)
+			sound = "lifeup.ogg"
+
+		elif type(item) == Bombup:
+			self.bombs += 1
+			sound = "bombup.ogg"
+
+		playSound(sound)
 
 		return True
-
-	def attack(self,args=None):
-		if args == []:
-			self.spells[self.spell-1]()
-		else:
-			self.spells[self.spell-1](args)
-
-class dot_boss(boss):
-	def __init__(self,x,y,num,life,lives,speed):
-		boss.__init__(self,x,y,num,"Boss-1.png",life=life,lives=lives)
-		self.speed = speed
-
-		self.spells.append(self.spell1)
-
-		self.pwr = {'p':0,'p':1,'s':0,'p':0}
-
-		self.lifes.append(1500)
-
-	def spell1(self,speed):
-		self.spellTimer.setMax(30000)
-		if self.spellTimer.isFinished():
-			self.kill()
-
-		self.spellTimer.timer()
-
-		self.pwr = {'p':0,'p':1,'s':0,'p':0,'p':1,'l':0}
-
-		name = 				 fontObj.render("EX Sign: Generic Danmaku",True,BLACK)
-		pos = 				(overlay.get_width()-(name.get_width()+5),10)
-		messages[name] =	 pos
-
-		self.speed = 		[0,0]
-
-		newPos = [surf_center(overlay,self.image)[0],10]
-
-		if self.rect.x < newPos[0]: self.rect.x += speed
-		if self.rect.x > newPos[0]: self.rect.x -= speed
-		if self.rect.y < newPos[1]: self.rect.y += speed
-		if self.rect.y > newPos[1]: self.rect.y -= speed
-
-		spawn2 = [0,0]
-		spawn3 = [OVERLAX-40,0]
-		self.shoot(5)
-
-		ctime = float(pygame.time.get_ticks())/1000 - float(self.last_time)/1000
-
-		if ctime >= 0.3:
-			b2 = bullet(x,y,spawn2,'img-77.png',(5,5))
-			b = bullet(x,y,spawn3,'img-77.png',(-5,5))
-
-			self.last_time = pygame.time.get_ticks()
-
-			bossBullet.add(b)
-			bossBullet.add(b2)
-
-	def update(self):
-		self.rect.x += self.speed[0]
-		self.rect.y += self.speed[1]
-
-		if self.rect.x <= 0:
-			self.speed[0] *= -1
-			self.rect.x += self.speed[0]
-		if self.rect.x >= (OVERLAX-self.image.get_width()): 
-			self.speed[0] *= -1
-			self.rect.x += self.speed[0]
-		if self.rect.y >= (OVERLAY-self.image.get_width()):
-			self.speed[1] *= -1
-			self.rect.y += self.speed[1]
-		if self.rect.y <= 0:
-			self.speed[1] *= -1
-			self.rect.y += self.speed[1]
 
 class laser(bullet):
 	def __init__(self,x,y,num,life,img,speed,playerb=False):
@@ -487,136 +275,6 @@ class laser(bullet):
 					playerBullet.remove(self)
 
 				del self
-
-class Item(Spritey):
-	def __init__(self,x,y,num,img):
-		Spritey.__init__(self,x,y,num)
-		
-		self.image = img
-
-		self.rect = self.image.get_rect()
-		self.rect.x = self.pos[0]
-		self.rect.y = self.pos[1]
-
-		self.speed = 3
-
-		self.ystart = self.pos[1] + 10
-		self.down = False
-
-	def update(self):
-		if self.rect.y >= self.ystart:
-			if not self.down: 	self.rect.y -= self.speed
-			else: 				self.rect.y += self.speed
-
-		if self.rect.y <= self.ystart:
-			self.down = True
-			self.rect.y += self.speed
-
-class PointItem(Item):
-	def __init__(self,x,y,num):
-		Item.__init__(self,x,y,num,SCORE_IMG)
-		self.sscore = 1000
-
-class Powerup(Item):
-	def __init__(self,x,y,num,size):
-
-		if size < 0 or size > 1:
-			print "Incorrect size!"
-			return None
-
-		self.pscore = (size*10)
-
-		if self.pscore <= 0: self.pscore = 1
-
-		if size is 0: 	img = POWER0_IMG
-		else: 			img = POWER1_IMG
-
-		Item.__init__(self,x,y,num,img)
-
-class Lifeup(Item):
-	def __init__(self,x,y,num):
-		Item.__init__(self,x,y,num,LIFE_UP_IMG)
-
-	def collect(self):
-		player.life += 1
-		playSound("lifeup.ogg")
-
-class Bombup(Item):
-	def __init__(self,x,y,num):
-		Item.__init__(self,x,y,num,BOMB_UP_IMG)
-
-	def collect(self):
-		player.bomb += 1
-		playSound("bombup.ogg")
-
-class Timer(object):
-	def __init__(self,maxTime):
-		"""Timer class that returns True when finished
-		maxTime = time in milliseconds before ending
-		"""
-		self.clock = pygame.time.Clock()
-
-		self.maxTime = maxTime
-		self.timing = False
-		self.lastTime = 0
-		self.timed = 0
-		self.finished = False
-
-	def startTimer(self):
-		self.reset()
-		self.timing = True
-		self.lastTime = pygame.time.get_ticks()
-
-		print self.timing
-
-	def timer(self):
-		ctime = pygame.time.get_ticks()
-
-		if self.timing:
-			if ctime-self.lastTime >= 1:
-				self.timed += 1
-				self.lastTime = ctime
-
-			if self.timed >= self.maxTime:
-				self.finished = True
-
-	def dispTime(self,pos,surf,font,color=BLACK,cutoff=0):
-		time = float(self.maxTime - self.timed)/1000
-		time = str(time)
-
-		if len(str(time)) <= 3:
-			time = str(0) + time
-
-		if cutoff:
-			time = time[:-cutoff]
-
-		ftime = font.render(str(time),True,color)
-		surf.blit(ftime,pos)
-
-	def setMax(self,newMax):
-		self.maxTime = newMax
-
-	def reset(self):
-		self.timing = False
-		self.timed = 0
-		self.finished = False
-		self.lastTime = pygame.time.get_ticks()
-		print "RESET"
-
-	def isFinished(self):
-		return self.finished
-
-def move():
-	#Change player direction based on pressed keys#
-	if r_move and not l_move: 	direction2[0] =  player.speed
-	elif l_move and not r_move: direction2[0] = -player.speed
-	elif r_move and l_move: 	direction2[0] =  0
-	else: 						direction2[0] =  0
-	
-	if u_move and not d_move: 	direction2[1] = -player.speed
-	elif d_move and not u_move: direction2[1] =  player.speed
-	elif d_move and u_move: 	direction2[1] =  0
-	else: 						direction2[1] =  0
 
 def updateScreen(BKG):
 	screen.blit(BKG,(0,0))
@@ -678,7 +336,8 @@ def cutin(bosss,players,stage):
 		elif i.startswith("PLAY:"):
 			playert.append(i.split(":")[1])
 		else:
-			print "TalkError: Invalid speach tag.", i.split(":")[0], "is not valid."
+			logging("Invalid speach tag. " + i.split(":")[0] + " is not valid.","err")
+			# print "TalkError: Invalid speach tag.", i.split(":")[0], "is not valid."
 			return [False] + + [x for x in [None for y in range(5)]]
 
 		text[text.index(i)] = i.split(":")[1]
@@ -686,6 +345,66 @@ def cutin(bosss,players,stage):
 	box = pygame.Surface((OVERLAX-20,OVERLAY-200))
 
 	return ([True,box,text,bosst,playert,pygame.time.get_ticks()])
+
+#EXPERIMENTAL CLASSES
+class SpellCard(object):
+	def __init__(self,time,name,owner,ownerGroup):
+		self.start = 	False
+		self.name = 	name
+		self.time = 	time
+
+		self.timer = 	Timer(time)
+
+		self.owner = 		owner
+		self.ownerGroup = 	ownerGroup
+
+	def runCard(self):
+		if not self.start:
+			self.start = True
+			self.timer.startTimer()
+
+	def Card(self):
+		'''This will spawn bullets when SpellCard is called'''
+		pass
+
+	def isStart(self):
+		return self.start
+
+	def getName(self):
+		return self.name
+
+	def dispName(self,surf,pos,font,color=BLACK):
+		namee = font.render(namee,True,color)
+		surf.blit(namee,pos)
+
+	def ChangeBKG(self,img,surf):
+		'''Don't know how to successfully use this yet, so I'm leaving it blank for now'''
+		pass
+
+class LargeEX(SpellCard):
+	def __init__(self,owner,ownerGroup):
+		SpellCard.__init__(self,30000,"Large X: Generic Danmaku",owner,ownerGroup)
+
+		self.spawn2 = [0,0]
+		self.spawn3 = [OVERLAX-40,0]
+		self.ctime = float(pygame.time.get_ticks())/1000 - float(self.last_time)/1000
+
+	def Card(self):
+		# self.shoot(5,group,surf)
+		if self.start:
+			self.ctime = float(pygame.time.get_ticks())/1000 - float(self.last_time)/1000
+
+			if self.ctime >= 0.3:
+				b2 = bullet(self.x,self.y,spawn2,'img-77.png',(5,5))
+				b = bullet(self.x,self.y,spawn3,'img-77.png',(-5,5))
+
+				self.last_time = pygame.time.get_ticks()
+
+				self.ownerGroup.add(b)
+				self.ownerGroup.add(b2)
+
+#Initialize the debugging engine
+# debugInit()
 
 speed = 		int(raw_input("Max speed: "))
 direction2 = 	[0,0]
@@ -703,8 +422,6 @@ cooldown = 		0
 messages = 		{} #{<fontObj>:<pos>}
 bomb_name = 	""
 
-playerbomb = False
-
 d_move = False
 u_move = False
 l_move = False
@@ -716,13 +433,13 @@ def_info = ["HI-Score: ",
 		"Bomb",
 		"Graze: "]
 
+pygame.mixer.pre_init(frequency=22050, size=-16, buffer=512)
 pygame.init()
 
 fps = 		pygame.time.Clock()
 overlay = 	pygame.Surface(OVERSIZE)
 screen = 	pygame.display.set_mode(SCREEN_SIZE)
 talks = 	open("thcut.dat",'r').read().split("NBOSS")
-fontObj = 	pygame.font.Font(os.path.join(os.path.abspath(os.getcwd()),'Fonts','THSpatial.ttf'),29)
 last_time = 0
 
 pygame.display.set_caption('Dot Boss Battle')
@@ -730,9 +447,9 @@ overlay.fill(WHITE)
 
 screen.blit(overlay,OVERPOS)
 
-posx = (overlay.get_width()/2)-5
+posx = (OVERLAX/2)-5
 
-player = 		Player(x,y,[posx,overlay.get_height()-5],speed,"player.png",2)
+player = 		Player(x,y,[posx,OVERLAY-5],speed,"player.png",2)
 
 #Set the boss's life to any positive integer, but I'm leaving it at 100 right now for testing
 boss =			dot_boss(x,y,[posx,40],life=100,lives=2,speed=[-2,0])
@@ -752,7 +469,7 @@ all_sprites =	pygame.sprite.Group(player,boss)
 
 player.setPower("max") #COMMENT THIS OUT LATER
 
-playMusic("th00_01.ogg") #Music begins a bit delayed
+playMusic("th00_02.ogg") #Music begins a bit delayed
 
 boss.spellTimer.startTimer()
 
@@ -808,11 +525,6 @@ while True:
 			collide = False
 			
 		if event.type == KEYUP:
-			# if event.key == K_UP:		direction2[1] = 0
-			# if event.key == K_DOWN:		direction2[1] = 0
-			# if event.key == K_LEFT:		direction2[0] = 0
-			# if event.key == K_RIGHT:	direction2[0] = 0
-
 			if event.key == K_DOWN:   	d_move = False
 			if event.key == K_UP:     	u_move = False
 			if event.key == K_LEFT:   	l_move = False
@@ -826,13 +538,13 @@ while True:
 			if event.key == K_LCTRL or event.key == K_RCTRL:
 				ctrl_hold = False
 
-	move()
+	move([d_move,u_move,l_move,r_move],direction2,player)
 						
 	######Update positions of sprites######
 	boss.rect.x -= DIRECTION1[0]
 	boss.rect.y -= DIRECTION1[1]
 
-	player.drawSprite()
+	player.drawSprite(overlay)
 	player.setFocus(focus)
 
 	######Sprite collision detection######
@@ -849,23 +561,15 @@ while True:
 		# score += 10
 		player.score += 10
 
-	for i in powerGroup.sprites():
-		if player.getPower() != "MAX":
-			if pygame.sprite.spritecollide(i,playerGroup,False):
-				itemGroup.remove(i)
-				powerGroup.remove(i)
-				player.power += i.pscore
+	for i in itemGroup.sprites():
+		if pygame.sprite.spritecollide(i,playerGroup,False):
+			collected = player.collect(i)
+
+			if collected:
+				for g in i.groups():
+					g.remove(i)
 
 				del i
-
-	for i in scoreGroup.sprites():
-		if pygame.sprite.spritecollide(i,playerGroup,False):
-			itemGroup.remove(i)
-			scoreGroup.remove(i)
-			# score += i.sscore
-			player.score += i.sscore
-
-			del i
 
 	for b in bossBullet.sprites():
 		if pygame.sprite.spritecollide(b,bombBullet,False):
@@ -909,11 +613,15 @@ while True:
 			del messages[bomb_name]
 
 	if boss.life <= 0 and not boss.lives <= 1:
-		# clear_b(bossBullet)
-		# boss.lives -= 1
-		# boss.setLife(-(0-boss.life) + boss.maxLife)
+		drops = boss.kill()
 
-		boss.kill()
+		for d in drops:
+			if type(d) == 	Powerup: 	powerGroup.add(d)
+			elif type(d) == PointItem: 	scoreGroup.add(d)
+			elif type(d) == Lifeup: 	lifeGroup.add(d)
+			elif type(d) == Bombup: 	bombupGroup.add(d)
+
+			else: logging("[Unknown item: "+ str(type(d)) +"]","err")
 
 	if boss.life <= 0 and boss.lives <= 1:
 		all_bullets.remove(x for x in playerBullet.sprites())
@@ -937,26 +645,32 @@ while True:
 	if player.life < 0:
 		all_sprites.remove(x for x in playerBullet.sprites())
 		all_sprites.remove(x for x in bossBullet.sprites())
+		
 		playerBullet.empty()
 		bossBullet.empty()
+		
 		all_sprites.remove(player)
+		playerGroup.remove(player)
+
 		player.life = 0
 
 		x = fontObj.render('YOU LOSE!',True,BLACK)
-		# overlay.blit(x,surf_center(overlay,x))
-		messages[x] = surf_center(overlay,x)
+		overlay.blit(x,surf_center(overlay,x))
+		# messages[x] = surf_center(overlay,x)
 		lose = True
 
+		stopMusic()
+
 	boss.update()
-	player.update()
+	player.update(direction2)
 
 	offscreen(all_bullets,OVERSIZE)
 	offscreen(powerGroup,OVERSIZE)
 	offscreen(scoreGroup,OVERSIZE)
 
-	if shoot and not lose and not player.playerbomb: player.shoot()
+	if shoot and not lose and not player.playerbomb: player.shoot(playerBullet)
 
-	if player.playerbomb: player.bomb()
+	if player.playerbomb: player.bomb(fontObj,overlay,bombBullet,bossBullet)
 	else: player.playerbomb = False
 
 	# if player.bomb_flash:
@@ -974,7 +688,7 @@ while True:
 		# elif boss.spell == 2:	boss.spell1(5)
 		# else:					boss.shoot(5)
 
-		boss.attack(args=5)
+		boss.attack(bossBullet,overlay,args=5)
 
 		last_time = pygame.time.get_ticks()/1000
 
@@ -985,7 +699,7 @@ while True:
 	itemGroup.draw(overlay)
 
 	for i in all_bullets.sprites():
-		i.drawSprite()
+		i.drawSprite(overlay)
 		if type(i) is laser: #This does run
 			# print "IT'S A LASER!"
 			i.kill(pygame.time.get_ticks())
@@ -997,14 +711,15 @@ while True:
 		#display all health bars
 		pygame.draw.line(overlay,BLUE,(5*l,5),(5+(5*l),5),3)
 
+	#This may be deprecated soon
 	for m in messages: overlay.blit(m,messages[m])
 	
 	#display boss health bar
-	boss.dispLife()
+	boss.dispLife(overlay)
 	boss.spellTimer.dispTime((OVERLAX/2-20,5),overlay,fontObj,cutoff=1)
 
 	# score += player.graze()
-	player.graze()
+	player.graze(bossBullet)
 
 	fps.tick(FPS)
 	info = [HI,

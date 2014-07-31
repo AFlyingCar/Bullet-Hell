@@ -56,6 +56,13 @@ POWER0_IMG = 	loadImage("img_power-0.png")
 POWER1_IMG = 	loadImage("img_power-1.png")
 S_BKG = 		loadImage("s_bkg".join(IMG))
 
+	#########
+	#Bullets#
+	#########
+BULL1 = 		loadImage('75'.join(IMG))
+BULL2 = 		loadImage('77'.join(IMG))
+BULL3 = 		loadImage('76'.join(IMG))
+
 #This is to make sure that the mixer loads so that
 # loadSound doesn't ask the user for confirmation to continue
 init(frequency=22050, size=-16, buffer=500)

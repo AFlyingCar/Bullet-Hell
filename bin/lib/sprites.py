@@ -10,6 +10,7 @@ from basic import surf_center,clear_b,Timer,fontObj
 class Spritey(pygame.sprite.Sprite):
 	'''Sprite class that defines some basic methods'''
 	def __init__(self,num,life=3):
+		logging("A new sprite has been successfully created!","std")
 		pygame.sprite.Sprite.__init__(self)
 
 		if num is 1: 	self.pos = START_POS_1
@@ -110,6 +111,8 @@ class Player(Spritey):
 		name = "Origin Sign: Red Rain"
 		name = font.render(name,True,BLACK)
 
+		logging("Activating bomb!", "std")
+
 		# if name not in messages:
 		# 	namepos = (0, surf.get_height()-(name.get_height()+5))
 		# 	messages[name] = namepos
@@ -209,8 +212,9 @@ class Player(Spritey):
 	 	self.setLife(-1)
 		self.bombs = self.maxBombs
 		print self.start_pos
-		print self.rect.x
-		print self.rect.y
+		# print self.rect.x
+		# print self.rect.y
+		logging("The player has died at X:" + self.rect.x + " Y:" + self.rect.y + ".","std")
 	 	self.setPos([self.start_pos,OVERLAY-5])
 	 	self.death_time = float(pygame.time.get_ticks())/1000
 
@@ -413,6 +417,7 @@ class boss(Spritey):
 		return dropList
 
 	def kill(self):
+		logging(str(self) + " has died!", "std")
 		self.clife += 1
 
 		self.maxLife = self.lifes[self.clife]

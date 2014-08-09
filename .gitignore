@@ -2,3 +2,4 @@
 .logs
 *.zip
 *.tmpcfg
+*.log

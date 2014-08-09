@@ -5,17 +5,24 @@
 
 import os
 from datetime import datetime
+# from constants import *
 
-now = datetime.now()
+# now = datetime.now()
 
 #NOTE
 # This will be moved eventually to be pulled from a config file
 debug_path = os.path.join(os.path.abspath(os.getcwd()),".logs")
+# debug_path = log_path
 
-def genLogName(logEveryRun=False):
+unlogged = [] #This is for files that have yet to be logged
+
+messageQueue = {} #messagetype:message1|[message2]
+
+def genLogName(logEveryRun=False,newName=""):
 	'''	Generate a log file name that has been timestamped with the date.
 		logEveryRun <- Whether to make a new log file everytime genLogName is run, or simply return the last log file used on this date
 	'''
+	now = datetime.now()
 	runs = 1
 
 	date_stamp = "-".join([str(now.year)[2:],str(now.month),str(now.day)])
@@ -25,19 +32,27 @@ def genLogName(logEveryRun=False):
 		for i in os.listdir(debug_path):
 			if i.endswith(str(date_stamp) + ".log"): runs += 1
 
-		filename = "_".join(["TestLog",date_stamp, "r" + str(runs)]) + ".log"
+		filename = "_".join([newName + "Log",date_stamp, "r" + str(runs)]) + ".log"
                 
-	else: filename = "_".join(["TestLog",date_stamp]) + ".log"
+	else: filename = "_".join([newName + "Log",date_stamp]) + ".log"
 
 	return filename
 
-def debugInit(logEveryRun=False):
+def debugInit(logEveryRun=False,setPath=None,fileName=""):
 	'''Only call this once at the start of your program'''
 
-	filename = genLogName(logEveryRun)
+	# if setPath:
+	# 	debug_path = setPath
 
-	if not os.path.exists(debug_path):
-		os.mkdir(debug_path)
+	filename = genLogName(logEveryRun,fileName)
+
+	if not setPath:
+		if not os.path.exists(debug_path):
+			os.mkdir(debug_path)
+
+	else:
+		if not os.path.exists(setPath):
+			os.mkdir(setPath)
 
 	full_path = os.path.join(debug_path,filename)
 	
@@ -45,7 +60,7 @@ def debugInit(logEveryRun=False):
 		log_file = open(full_path,"w")
 	else:
 		log_file = open(full_path,"a")
-		log_file.write("\n" + ("="*25) + "RESTART" + ("="*25))
+		log_file.write("\n" + ("="*25) + "RESTART" + ("="*25) + "\n\n")
 
 	log_file.close()
 
@@ -54,6 +69,7 @@ def debugInit(logEveryRun=False):
 	return full_path # This gets sent to a tmpcfg file, which gets deleted once the program terminates
 
 def debugUnInit():
+	logging("Uninitializing the debug engine...","std")
 	try:
 		tmpcfg_path = os.path.join(os.path.abspath(os.getcwd()),"config.tmpcfg")
 
@@ -62,9 +78,10 @@ def debugUnInit():
 	except Exception as e:
 		logging("Could not delete config.tmpcfg!", "err", message2=e)
 
-def logging(message1, msg_type, message2=None, dflag=False,filename=None):
-	'''If a .tmpcfg file is not created in the initialization process, make sure that filename gets passed to logging, otherwise it will fail!'''
-
+def logging(message1, msg_type, message2=None,dflag=False,queue=False):
+	'''Write messages to a .log file stored in a .logs/ folder.'''
+	now = datetime.now()
+	
 	tmpcfg_path = os.path.join(os.path.abspath(os.getcwd()),"config.tmpcfg")
 
 	if os.path.exists(tmpcfg_path):
@@ -74,13 +91,13 @@ def logging(message1, msg_type, message2=None, dflag=False,filename=None):
 		print "Setting filename to current folder."
 
 		filename = genLogName()
-
 	try:
 		msg_time = "[" + ":".join([str(now.hour), str(now.minute), str(now.second)])
 		msg = message1
 
 		if msg_type == "err": 		msg_type = " - ERROR]: "
 		elif msg_type == "warn": 	msg_type = " - WARNING]: "
+		elif msg_type == "test":	msg_type = " - TEST]: "
 		else: 						msg_type = " - STDOUT]: "
 
 		if message2:
@@ -97,12 +114,30 @@ def logging(message1, msg_type, message2=None, dflag=False,filename=None):
 			print "More information can be found in:"
 			print full_path
 
-		open(filename,'a').write("\n" + output)
+		if not queue:
+			parseQueue()
+
+		open(filename,'a').write(output + "\n")
 
 	except Exception as e:
 		print "A FATAL ERROR OCCURRED!"
 		print "UNABLE TO WRITE OUTPUT TO", filename, "!"
-		print "FULL ERROR MESSAGE:", e
+		print "FULL ERROR MESSAGE:\n", type(e).__name__, e
+
+def isDebugInit():
+	tmpcfg_path = os.path.join(os.path.abspath(os.getcwd()),"config.tmpcfg")
+
+	return os.path.exists(tmpcfg_path)
+
+def parseQueue():
+	'''Currently broken.
+	Meant to allow logging to store a queue of messages until the program ends in the case of the debugging engine
+	not being initialized.'''
+	for msg in messageQueue:
+		message2 = messageQueue[msg]
+		if message2 is "None": message2 = None
+
+		logging(msg,messageQueue[msg],message2=message2,queue=True)
 
 if __name__ == "__main__":
 	#For testing purposes only

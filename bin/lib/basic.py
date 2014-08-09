@@ -5,8 +5,12 @@
 
 import pygame,os,sys
 from pygame.locals import *
-from color import *
+from globalVar import *
 from debugger import *
+from settings import *
+from color import *
+
+s_init_check = False # <- Whether to check for an initialized mixer
 
 ######Load images from ./Images and return a blank Surface if the image couldn't be found
 def loadImage(filename):
@@ -14,7 +18,8 @@ def loadImage(filename):
 		return filename
 
 	else:
-		loc = os.path.join(os.getcwd(),"Images",filename)
+		# loc = os.path.join(os.getcwd(),"Images",filename)
+		loc = os.path.join(getSetting('path_image'),filename)
 
 		if os.path.exists(loc):
 			pic = pygame.image.load(loc)
@@ -34,29 +39,34 @@ def loadImage(filename):
 ######Load sounds from ./Sound and returns an error if the file was not found,
 ###### or if pygame.mixer was not initialized
 def loadSound(filename):
-	path = os.path.join(os.getcwd(),"Sound",filename)
+	# path = os.path.join(os.getcwd(),"Sound",filename)
+	path = os.path.join(getSetting('path_sound'),filename)
 
 	if os.path.exists(path):
 		if pygame.mixer.get_init():
 			s = pygame.mixer.Sound(path)
+			logging("Successfully loaded " + filename,"std")
 			return s
 
 		else:
 			logging("Mixer not initialized!","warn")
 			# print "Mixer not initialized!"
 
-			while True:
-				yn = raw_input("Initialize?(y/n) ")
-				if yn is 'y':
-					pygame.mixer.init()
-					break
-				elif yn is 'n':
-					# print "Warning: Mixer still not initialized!"
-					# print "This could result in the program failing."
-					logging("Warning: Mixer still not initialized!", "warn", "This could result in the program failing.")
-					break
-				else:
-					print "'y' or 'n' please!"
+			if not s_init_check:
+				while True:
+					yn = raw_input("Initialize?(y/n) ")
+					if yn is 'y':
+						pygame.mixer.init()
+						s_init_check = False
+						break
+					elif yn is 'n':
+						# print "Warning: Mixer still not initialized!"
+						# print "This could result in the program failing."
+						logging("Warning: Mixer still not initialized!", "warn", "This could result in the program failing.")
+						s_init_check = True
+						break
+					else:
+						print "'y' or 'n' please!"
 
 	else:
 		# print "SoundError: Could not find", filename, "in \\Sound!"
@@ -64,21 +74,24 @@ def loadSound(filename):
 		return "err"
 
 def playSound(filename):
-	if type(filename) is pygame.mixer.Sound:
-		filename.play()
+	if pygame.mixer.get_init():
+		if type(filename) is pygame.mixer.Sound:
+			filename.play()
 
-	elif type(filename) is str:
-		s = loadSound(filename)
+		elif type(filename) is str:
+			s = loadSound(filename)
 
-		if s == "err":
-			pass
+			if s == "err":
+				pass
 
-		if type(s) is pygame.mixer.Sound:
-			s.play()
+			if type(s) is pygame.mixer.Sound:
+				s.play()
 
+		else:
+			# print "TypeError:", type(filename), "is not valid."
+			logging("Invalid sound type " + type(filename),"err")
 	else:
-		# print "TypeError:", type(filename), "is not valid."
-		logging("Invalid image type " + type(filename),"err")
+		logging("Unable to play sound. Mixer not initialized.","err")
 
 def stopSound(sound=None):
 	'''Will stop a single sound from playing if a sound object is given. Otherwise, it will stop all sounds.'''
@@ -88,7 +101,8 @@ def stopSound(sound=None):
 		pygame.mixer.stop()
 
 def loadMusic(filename):
-	path = os.path.join(os.getcwd(),"Music",filename)
+	# path = os.path.join(os.getcwd(),"Music",filename)
+	path = os.path.join(getSetting("path_music"),filename)
 
 	if pygame.mixer.music.get_busy():
 		pygame.mixer.music.fadeout(2)
@@ -100,6 +114,23 @@ def loadMusic(filename):
 		else:
 			# print "Mixer not initialized!"
 			logging("Mixer not initialized!","warn")
+			
+			if not s_init_check:
+				while True:
+					yn = raw_input("Initialize?(y/n) ")
+					if yn is 'y':
+						pygame.mixer.init()
+						s_init_check = False
+						break
+					elif yn is 'n':
+						# print "Warning: Mixer still not initialized!"
+						# print "This could result in the program failing."
+						logging("Warning: Mixer still not initialized!", "warn", "This could result in the program failing.")
+						s_init_check = True
+						break
+					else:
+						print "'y' or 'n' please!"
+
 	else:
 		# print "Path:", path, "does not exist!"
 		logging("Directory -> " + path + " does not exist!", "err")
@@ -153,24 +184,50 @@ def clear_b(group):
 			g.remove(x)
 	group.empty()
 
+	logging("Clearing screen...","std")
+
+def changeSpeed(bullet,endPos,newSpeed=None):
+	c_Speed = bullet.speed
+	cPos = bullet.getPos()
+
+	if newSpeed:
+		newX = (c_Speed[0]/c_Speed[0]) * newSpeed
+		newY = (c_Speed[1]/c_Speed[1]) * newSpeed
+		c_Speed = [newX,newY]
+
+	#Set X speed
+	if cPos[0] > endPos[0] and (c_Speed[0]/c_Speed[0]) != -1:	c_Speed[0] *= -1
+	elif cPos[0] < endPos[0] and (c_Speed[0]/c_Speed[0])*-1 != 1: c_Speed[0] *= -1
+	
+	#Set Y speed
+	if cPos[1] > endPos[1] and (c_Speed[1]/c_Speed[1]) != -1:	c_Speed[1] *= -1
+	elif cPos[1] < endPos[1] and (c_Speed[1]/c_Speed[1])*-1 != 1: c_Speed[1] *= -1
+
+	return speed
+
 def shutdown():
 	logging("Shutting down pygame...", "std")
+	print "Shutting down pygame..."
 	pygame.quit()
 	logging("Pygame has shut down successfully!", "std")
-
-	# logging("UnInitializing debug engine...", "std")
-
-	logging("Ending main program", "std")
+	print "Pygame has shut down successfully!"
 
 	debugUnInit()
 
 	sys.exit()
 
-def surf_center(surface,newSurface):
-	x = (surface.get_width()/2) - (newSurface.get_width()/2)
-	y = (surface.get_height()/2) - (newSurface.get_height()/2)
+def surf_center(surface,newSurface=None):
+	if newSurface:
+		x = (surface.get_width()/2) - (newSurface.get_width()/2)
+		y = (surface.get_height()/2) - (newSurface.get_height()/2)
 
-	return [x,y]
+		return [x,y]
+
+	else:
+		x = surface.get_width()/2
+		y = surface.get_height()/2
+
+		return [x,y]
 
 def fpsPrint(fps,screenSize,fontObj,screen):
 	OVERLAX = screenSize[0]
@@ -196,16 +253,16 @@ def symbol(integer,img,pos,screen):
 
 	screen.blit(x,pos)
 
-def dispText(text,surf,pos,color=BLACK):
+def dispText(text,surf,pos,fontObj,color=BLACK):
 	f = fontObj.render(text,True,color)
 	surf.blit(f,pos)
 
 def move(moveList,direction,sprite):
-	# d_move,u_move,l_move,r_move
-	d_move = moveList[0]
-	u_move = moveList[1]
-	l_move = moveList[2]
-	r_move = moveList[3]
+	d_move,u_move,l_move,r_move = [i for i in moveList]
+	# d_move = moveList[0]
+	# u_move = moveList[1]
+	# l_move = moveList[2]
+	# r_move = moveList[3]
 
 	#Change player direction based on pressed keys
 	if r_move and not l_move: 	direction[0] =  sprite.speed
@@ -279,11 +336,5 @@ class Timer(object):
 
 	def isFinished(self):
 		return self.finished
-
-#Here we define some basic variables and objects that will be needed by everything in the game
-
-pygame.font.init()
-
-fontObj = pygame.font.Font(os.path.join(os.path.abspath(os.getcwd()),'Fonts','THSpatial.ttf'),29)
 
 nuclear = u'\u2622'

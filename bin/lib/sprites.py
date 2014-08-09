@@ -4,13 +4,14 @@
 #A place to store all of the sprite classes
 
 import pygame.sprite,random
+from debugger import logging
+from dependencies import *
 from constants import *
-from basic import surf_center,clear_b,Timer,fontObj
+from basic import *
 
 class Spritey(pygame.sprite.Sprite):
 	'''Sprite class that defines some basic methods'''
 	def __init__(self,num,life=3):
-		logging("A new sprite has been successfully created!","std")
 		pygame.sprite.Sprite.__init__(self)
 
 		if num is 1: 	self.pos = START_POS_1
@@ -40,7 +41,7 @@ class Spritey(pygame.sprite.Sprite):
 
 	def shoot(self,group):
 		######Generic sprite shooting######
-		b = bullet((self.rect.x,self.rect.y-30),'75'.join(IMG),(0,-30))
+		b = circleShot((self.rect.x,self.rect.y-30),(0,-30))
 		group.add(b)
 
 	def setLife(self,life): self.life += life
@@ -49,6 +50,11 @@ class Spritey(pygame.sprite.Sprite):
 		self.pos = pos
 		self.rect.x = self.pos[0]
 		self.rect.y = self.pos[1]
+
+	def getPos(self):
+		x = self.rect.x
+		y = self.rect.y
+		return [x,y]
 
 	def drawSprite(self,surface):
 		pos = surf_center(self.sprite,self.image)
@@ -67,13 +73,16 @@ class Spritey(pygame.sprite.Sprite):
 	def returnToStart(self):
 		self.setPos(self.start_pos)
 
+	def kill(self):
+		# logging("Killing " + str(self) + "!", "std")
+		for g in self.groups():
+			g.remove(self)
+
+		del self
+
 class Player(Spritey):
 	def __init__(self,x,y,num,maxs,sprite,life):
 		Spritey.__init__(self,num,life=life)
-
-		print num
-		print self.pos
-
 		self.power = 	0
 		self.grazep = 	0
 		self.power = 	1
@@ -97,6 +106,8 @@ class Player(Spritey):
 
 		self.playerbomb = 	False
 
+		self.pointColl = 	0
+
 	def update(self,direction):
 		self.rect.x += direction[0]
 		self.rect.y += direction[1]
@@ -106,17 +117,23 @@ class Player(Spritey):
 		if self.rect.y >= (OVERLAY-self.image.get_width()): 	self.rect.y -= self.speed #BOTTOM
 		if self.rect.y <= 0: 									self.rect.y += self.speed #TOP
 
-	def bomb(self,font,surf,group1,group2):
+	def makeGod(self):
+		self.god = not self.god
+
+		if self.god: 	logging("Activating God mode...","std")
+		else: 			logging("Deactivating God mode...","std")
+
+	def bomb(self,nei,nei2,nei3,nei4):
+		'''Since bomb is broken currently, I'm making sure that it doesn't work ever. This will prevent the program from crashing every time it is run.'''
+		return None
+
 		#5 large red orbs rain from above. Once all have hit the ground, a large white laser shoots up the middle ofthe screen.
 		name = "Origin Sign: Red Rain"
-		name = font.render(name,True,BLACK)
+		name = fontObj.render(name,True,BLACK)
 
-		logging("Activating bomb!", "std")
-
-		# if name not in messages:
-		# 	namepos = (0, surf.get_height()-(name.get_height()+5))
-		# 	messages[name] = namepos
-		# namepos = (0, surf.get_height()-(name.get_height()+5))
+		if name not in messages:
+			namepos = (0, overlay.get_height()-(name.get_height()+5))
+			messages[name] = namepos
 
 		# dispText("Origin Sign: Red Rain",overlay,namepos)
 		
@@ -128,46 +145,31 @@ class Player(Spritey):
 		if not self.bombing:
 			self.bombs -= 1
 			# print ":",self.bombing
-			# for b in range(5):
-			# 	x1 = random.randint(boss.rect.x-100,boss.rect.x+100)
+			for b in range(5):
+				x1 = random.randint(boss.rect.x-100,boss.rect.x+100)
 
-			# 	b = bullet(self.x,self.y,(x1,0),'76'.join(IMG),(0,5),playerb=True)
-			# 	group1.add(b)
+				b = bullet((x1,0),BULL3,(0,5),playerb=True)
+				bombBullet.add(b)
 
-			# self.bombing = True
-
-			if 'start_seed' in vars(self):
-			# if not hasattr(self,'start_seed'):
-				self.start_seed = 0
-			else:
-				self.start_seed += 1
-
-			x1 = self.start_seed * int(OVERLAX/5)
-			b = bullet((x1,0),'76'.join(IMG),(0,5),playerb=True)
-			group1.add(b)
-
-
-			if len(group1.sprites()) >= 5:
-				self.bombing = True
-
+			self.bombing = True
 			# print ">",self.bombing
 
-		if len(group1.sprites()) <= 0:
-			print "running"
+		if len(bombBullet.sprites()) <= 0:
+			# print "running"
+			logging("Running playerbomb!","std")
 			self.playerbomb = False
 
-			self.god = 			False
+			# self.god = 			False
+			self.makeGod()
 			focus = 			False
 			# bomb_fin = 			True
 
 			self.bombing = False
 
-			# del messages[name]
+			del messages[name]
 
-			if hasattr(self,'start_seed'): del self.start_seed
-
-			clear_b(group1)
-			clear_b(group2)
+			clear_b(bossBullet)
+			clear_b(playerBullet)
 			
 			# start = surf_center(boss.image,loadImage('img_laser1.png'))
 			# start[1] = OVERLAY-loadImage('img_laser1.png').get_height()
@@ -193,29 +195,11 @@ class Player(Spritey):
 		if point.lower() == "max": 	self.power = self.maxPower
 		else: 						self.power += point
 
-	def collect(self,item):
-		if type(item) == PointItem:
-			self.score += item.sscore
-
-		elif type(item) == Powerup:
-			if self.getPower() != "MAX":
-				self.score += item.pscore
-
-		elif type(item) == Lifeup:
-			self.setLife(1)
-
-		elif type(item) == Bombup:
-			self.bombs += 1
-
 	def kill(self):
 	 	self.god = True
 	 	self.setLife(-1)
 		self.bombs = self.maxBombs
-		print self.start_pos
-		# print self.rect.x
-		# print self.rect.y
-		logging("The player has died at X:" + self.rect.x + " Y:" + self.rect.y + ".","std")
-	 	self.setPos([self.start_pos,OVERLAY-5])
+	 	self.setPos(self.start)
 	 	self.death_time = float(pygame.time.get_ticks())/1000
 
 	 	playSound('playerdeath.ogg')
@@ -229,11 +213,10 @@ class Player(Spritey):
 			x3 = self.rect.x + 10
 			x4 = self.rect.x - 10
 
-			b = bullet(self.x,self.y,(x1,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
-			b2 = bullet(self.x,self.y,(x2,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
-			b3 = bullet(self.x,self.y,(x3,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
-			b4 = bullet(self.x,self.y,(x4,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
-
+			b = bullet((x1,self.rect.y-30),BULL1,(0,-30),playerb=True)
+			b2 = bullet((x2,self.rect.y-30),BULL1,(0,-30),playerb=True)
+			b3 = bullet((x3,self.rect.y-30),BULL1,(0,-30),playerb=True)
+			b4 = bullet((x4,self.rect.y-30),BULL1,(0,-30),playerb=True)
 
 			bullet_list.append(b)
 			bullet_list.append(b2)
@@ -245,9 +228,9 @@ class Player(Spritey):
 			x2 = self.rect.x + (self.sprite.get_width()/2)
 			x3 = self.rect.x
 
-			b = bullet(self.x,self.y,(x1,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
-			b2 = bullet(self.x,self.y,(x2,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
-			b3 = bullet(self.x,self.y,(x3,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
+			b = bullet((x1,self.rect.y-30),BULL1,(0,-30),playerb=True)
+			b2 = bullet((x2,self.rect.y-30),BULL1,(0,-30),playerb=True)
+			b3 = bullet((x3,self.rect.y-30),BULL1,(0,-30),playerb=True)
 
 			bullet_list.append(b)
 			bullet_list.append(b2)
@@ -257,8 +240,8 @@ class Player(Spritey):
 			x1 = self.rect.x - (self.sprite.get_width()/2)
 			x2 = self.rect.x + (self.sprite.get_width()/2)
 			
-			b = bullet(self.x,self.y,(x1,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
-			b2 = bullet(self.x,self.y,(x2,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
+			b = bullet((x1,self.rect.y-30),BULL1,(0,-30),playerb=True)
+			b2 = bullet((x2,self.rect.y-30),BULL1,(0,-30),playerb=True)
 			
 			bullet_list.append(b)
 			bullet_list.append(b2)
@@ -266,13 +249,13 @@ class Player(Spritey):
 		else:
 			x1 = self.rect.x
 
-			b = bullet(self.x,self.y,(x1,self.rect.y-30),'75'.join(IMG),(0,-30),playerb=True)
+			b = bullet((x1,self.rect.y-30),BULL1,(0,-30),playerb=True)
 			
 			bullet_list.append(b)
 
-		group.add(bullet_list)
+		playerBullet.add(bullet_list)
 
-	def graze(self,bgroup):
+	def graze(self,group):
 		# for i in bossBullet.sprites():
 		# 	if i.gRect.colliderect(self.rect) and not i.rect.colliderect(self.rect):
 		# 		self.grazep += 1
@@ -280,7 +263,7 @@ class Player(Spritey):
 
 		# return 0
 
-		for i in bgroup.sprites():
+		for i in bossBullet.sprites():
 			if i.gRect.colliderect(self.rect) and not i.rect.colliderect(self.rect) and not i.grazed:
 				#For some reason, graze points are increasing by two
 				self.grazep += 1
@@ -290,9 +273,30 @@ class Player(Spritey):
 
 		return 0
 
+	def collect(self,item):
+		if type(item) == PointItem:
+			self.score += item.sscore
+			self.pointColl += 1
+
+		elif type(item) == Powerup:
+			if self.getPower() != "MAX":
+				self.score += item.pscore
+			else:
+				return False
+
+		elif type(item) == Lifeup:
+			self.setLife(1)
+
+		elif type(item) == Bombup:
+			self.bombs += 1
+
+		playSound(item.sound)
+
+		return True
+
 class bullet(Spritey):
 	def __init__(self,num,img,speed,playerb=False):
-		Spritey.__init__(self,num)
+		Spritey.__init__(self,num,life=1)
 
 		self.sprite = loadImage(img)
 
@@ -321,10 +325,19 @@ class bullet(Spritey):
 		self.rect.x += self.speed[0]
 		self.rect.y += self.speed[1]
 
+	def turn(self,degrees):
+		'''This will allow a bullet to turn by a certain amout of degrees, changing it's direction and speed.'''
+		pass
+
+class circleShot(bullet):
+	def __init__(self,num,speed,playerb=False):
+		bullet.__init__(self,num,BULL2,speed,playerb=playerb)
+
 class boss(Spritey):
-	def __init__(self,x,y,num,img,life=100,lives=1):
+	def __init__(self,font,num,img,life=100,lives=1):
 		Spritey.__init__(self,num,life=life)
 		self.lives = lives
+		self.spellFont = font
 
 		self.spell = 1
 
@@ -368,15 +381,15 @@ class boss(Spritey):
 				start[1] += self.rect.y
 
 				if i is 1:
-					b = bullet(start,BULL2,(0,5))
+					b = circleShot(start,(0,5))
 				elif i is 2:
-					b = bullet(start,BULL2,(0,-5))
+					b = circleShot(start,(0,-5))
 				elif i is 3:
-					b = bullet(start,BULL2,(-5,0))
+					b = circleShot(start,(-5,0))
 				elif i is 4:
-					b = bullet(start,BULL2,(5,0))
+					b = circleShot(start,(5,0))
 				else:
-					b = bullet(start,BULL2,(0,5))
+					b = circleShot(start,(0,5))
 
 				group.add(b)
 
@@ -443,8 +456,8 @@ class boss(Spritey):
 			self.spells[self.spell-1](args,group,surf)
 
 class dot_boss(boss):
-	def __init__(self,x,y,num,life,lives,speed):
-		boss.__init__(self,x,y,num,"Boss-1.png",life=life,lives=lives)
+	def __init__(self,font,num,life,lives,speed):
+		boss.__init__(self,font,num,"Boss-1.png",life=life,lives=lives)
 		self.speed = speed
 
 		self.spells.append(self.spell1)
@@ -452,6 +465,7 @@ class dot_boss(boss):
 		self.pwr = {'p':0,'p':1,'s':0,'p':0}
 
 		self.lifes.append(1500)
+
 
 	def spell1(self,speed,group,surf):
 		self.spellTimer.setMax(30000)
@@ -462,7 +476,7 @@ class dot_boss(boss):
 
 		self.pwr = {'p':0,'p':1,'s':0,'p':0,'p':1,'l':0}
 
-		name = 				 fontObj.render("EX Sign: Generic Danmaku",True,BLACK)
+		name = 				 self.spellFont.render("EX Sign: Generic Danmaku",True,BLACK)
 		pos = 				(OVERLAX-(name.get_width()+5),10)
 		# messages[name] =	 pos
 
@@ -482,8 +496,8 @@ class dot_boss(boss):
 		ctime = float(pygame.time.get_ticks())/1000 - float(self.last_time)/1000
 
 		if ctime >= 0.3:
-			b2 = bullet(spawn2,BULL2,(5,5))
-			b = bullet(spawn3,BULL2,(-5,5))
+			b = circleShot(spawn2,(5,5))
+			b2 = circleShot(spawn3,(-5,5))
 
 			self.last_time = pygame.time.get_ticks()
 
@@ -539,10 +553,12 @@ class Item(Spritey):
 		self.rect.x = 	self.pos[0]
 		self.rect.y = 	self.pos[1]
 
-		self.speed = 3
+		self.speed = 	3
 
 		self.ystart = 	self.pos[1] + 10
 		self.down = 	False
+
+		self.sound = 	PICKUP_S
 
 	def update(self):
 		if self.rect.y >= self.ystart:
@@ -556,6 +572,11 @@ class Item(Spritey):
 class PointItem(Item):
 	def __init__(self,x,y,num):
 		Item.__init__(self,x,y,num,SCORE_IMG)
+		self.sscore = 10000
+
+class StarPointItem(Item):
+	def __init__(self,x,y,num):
+		Item.__init__(self,x,y,num,STAR_POINT_IMG)
 		self.sscore = 1000
 
 class Powerup(Item):
@@ -578,17 +599,12 @@ class Powerup(Item):
 class Lifeup(Item):
 	def __init__(self,x,y,num):
 		Item.__init__(self,x,y,num,LIFE_UP_IMG)
-
-	def collect(self):
-		player.life += 1
-		playSound("lifeup.ogg")
+		self.sound = LIFE_UP_S
 
 class Bombup(Item):
 	def __init__(self,x,y,num):
 		Item.__init__(self,x,y,num,BOMB_UP_IMG)
 
-	def collect(self):
-		player.bomb += 1
-		playSound("bombup.ogg")
+		self.sound = BOMB_UP_S
 
 nuclear = u'\u2622'

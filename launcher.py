@@ -46,14 +46,14 @@ def initAll():
 	for times in range(10):
 		'''Attempt to initialize 10 times before giving up.'''
 		try:
-			debugInit(setPath=ConfigSettings["path_log"])
+			debugInit(setPath=getSetting("path_log"))
 			success = True
 
 			fonts = fontInit()
 			success = True
 
-			if ConfigSettings["enable_sound"]:
-				pygame.mixer.init(frequency=22050, size=-16, buffer=500)
+			if getSetting("enable_sound"):
+				pygame.mixer.pre_init(frequency=22050, size=-16, buffer=500)
 				success = True
 
 			pygame.init()
@@ -81,8 +81,9 @@ if __name__ == "__main__":
 		try:
 			import main
 		except BaseException as e:
-			error = ": ".join([type(e).__name__,str(e)])
-			logging("A fatal error has occurred in the game, and it must be shut down.","err",error)
-			shutdown()
+			if type(e) != SystemExit:
+				error = ": ".join([type(e).__name__,str(e)])
+				logging("A fatal error has occurred in the game, and it must be shut down.","err",error)
+				shutdown()
 
 nuclear = u'\u2622'

@@ -2,7 +2,6 @@
 #8/7/14
 #Globals
 # A file holding all global variables. Similar to constants
-# 	NOTE: This is experimental, and may be deprecated in the future
 
 import pygame,os
 from constants import *
@@ -41,8 +40,6 @@ r_move = False
 
 posx = (OVERLAX/2)-5
 
-playerBullet = 	pygame.sprite.Group()
-bossBullet = 	pygame.sprite.Group()
 bombBullet = 	pygame.sprite.Group()
 all_bullets = 	pygame.sprite.Group()
 scoreGroup = 	pygame.sprite.Group()

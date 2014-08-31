@@ -3,7 +3,7 @@
 # Dependencies
 # Image and sound dependencies
 
-from basic import loadImage,loadSound
+from basic import loadImage,loadSound,loadAnim,sprite_sheet
 from pygame.mixer import init
 
 #We load images and sounds before-hand so that less memory is used up trying to constantly reference
@@ -21,6 +21,7 @@ STARPOINT_IMG = loadImage("img_starpoint.png")
 POWER0_IMG = 	loadImage("img_power-0.png")
 POWER1_IMG = 	loadImage("img_power-1.png")
 S_BKG = 		loadImage("img-s_bkg.png")
+PLAYER1_IMG = 	loadImage("player.png")
 
 	#########
 	#Bullets#
@@ -28,6 +29,12 @@ S_BKG = 		loadImage("img-s_bkg.png")
 BULL1 = 		loadImage("img-75.png")
 BULL2 = 		loadImage("img-77.png")
 BULL3 = 		loadImage("img-76.png")
+
+	############
+	#Animations#
+	############
+# P_DEATH_ANIM = loadAnim("playerdeath")
+P_DEATH_ANIM = sprite_sheet((64,64),"explosion\\explosion1.png",pos=(0,0))
 
 #This is to make sure that the mixer loads so that
 # loadSound doesn't ask the user for confirmation to continue

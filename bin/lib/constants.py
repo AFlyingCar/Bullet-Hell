@@ -23,13 +23,15 @@ BLACK = (0,0,0)
 WHITE = (255,255,255)
 RED = 	(255,0,0)
 BLUE = 	(0,0,255)
+PURPLE= (255,0,255)
 
 #####################
 #SIZES AND POSITIONS#
 #####################
 
 IMG = 			('img-','.png')
-SCREEN_SIZE = 	(640,480)
+# SCREEN_SIZE = 	(640,480)
+SCREEN_SIZE = getSetting('screen_size')
 
 #MAX-SIZE of the game overlay
 OVERSIZE =		(SCREEN_SIZE[0]-300,SCREEN_SIZE[1]-50)

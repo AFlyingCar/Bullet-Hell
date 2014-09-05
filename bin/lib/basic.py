@@ -8,18 +8,19 @@ from pygame.locals import *
 from globalVar import *
 from debugger import *
 from settings import *
+# from entities import *
 from color import *
 
 s_init_check = False # <- Whether to check for an initialized mixer
 
 ######Load images from ./Images and return a blank Surface if the image couldn't be found
-def loadImage(filename):
+def loadImage(filename,path=getSetting('path_image'),fail_size=[10,10]):
 	if type(filename) == pygame.Surface:
 		return filename
 
 	else:
 		# loc = os.path.join(os.getcwd(),"Images",filename)
-		loc = os.path.join(getSetting('path_image'),filename)
+		loc = os.path.join(path,filename)
 
 		if os.path.exists(loc):
 			pic = pygame.image.load(loc)
@@ -33,8 +34,22 @@ def loadImage(filename):
 			# print "ImageError: Could not find", filename, "in \\Images!"
 			# print "Loading blank image..."
 
-			pic = pygame.Surface((10,10))
+			pic = pygame.Surface(fail_size)
+			pic.fill(PURPLE)
 			return pic
+
+def loadAnim(animName):
+	path = os.path.join(getSetting('path_anim'),animName)
+	frames = []
+
+	if not os.path.exists(path):
+		logging("Path: " + path + " does not exist!","err","Loading blank animation...")
+		return frames
+
+	for f in os.listdir(path):
+		frames.append(loadImage(f,path))
+
+	return frames
 
 ######Load sounds from ./Sound and returns an error if the file was not found,
 ###### or if pygame.mixer was not initialized
@@ -74,24 +89,28 @@ def loadSound(filename):
 		return "err"
 
 def playSound(filename):
-	if pygame.mixer.get_init():
-		if type(filename) is pygame.mixer.Sound:
-			filename.play()
+	if getSetting('enable_sound'):
+		if pygame.mixer.get_init():
+			if type(filename) is pygame.mixer.Sound:
+				filename.play()
 
-		elif type(filename) is str:
-			s = loadSound(filename)
+			elif type(filename) is str:
+				s = loadSound(filename)
 
-			if s == "err":
-				pass
+				if s == "err":
+					pass
 
-			if type(s) is pygame.mixer.Sound:
-				s.play()
+				if type(s) is pygame.mixer.Sound:
+					s.play()
 
+			else:
+				# print "TypeError:", type(filename), "is not valid."
+				logging("Invalid sound type " + type(filename),"err")
 		else:
-			# print "TypeError:", type(filename), "is not valid."
-			logging("Invalid sound type " + type(filename),"err")
+			logging("Unable to play sound. Mixer not initialized.","err")
+
 	else:
-		logging("Unable to play sound. Mixer not initialized.","err")
+		logging("Sound has not been enabled!","warn","Cannot play sound file: " + str(filename))
 
 def stopSound(sound=None):
 	'''Will stop a single sound from playing if a sound object is given. Otherwise, it will stop all sounds.'''
@@ -148,43 +167,52 @@ def stopMusic():
 	'''Will stop all music from playing.'''
 	pygame.mixer.music.stop()
 
-def offscreen(group,maxSize):
+def offscreen(maxSize,groups=[]):
 	#For bullets only
 	OVERLAX = maxSize[0]
 	OVERLAY = maxSize[1]
 
-	for b in group.sprites():
-		delete = False
+	for group in groups:
+		for b in group.sprites():
+			delete = False
 
-		if b.rect.x <= (0-b.image.get_width()):
-			for g in b.groups():
-				g.remove(b)
-			delete = True
+			if b.rect.x <= (0-b.image.get_width()):
+				b.addLife(-2)
+				delete = True
 
-		if b.rect.x >= OVERLAX:
-			for g in b.groups():
-				g.remove(b)
-			delete = True
+			if b.rect.x >= OVERLAX:
+				b.addLife(-2)
+				delete = True
 
-		if b.rect.y >= OVERLAY:
-			for g in b.groups():
-				g.remove(b)
-			delete = True
+			if b.rect.y >= OVERLAY:
+				b.addLife(-2)
+				delete = True
 
-		if b.rect.y <= (0-b.image.get_height()):
-			for g in b.groups():
-				g.remove(b)
-			delete = True
+			if b.rect.y <= (0-b.image.get_height()):
+				b.addLife(-2)
+				delete = True
 
-		if delete: del b
+			if delete: del b
 
-def clear_b(group):
-	for x in group.sprites():
-		for g in x.groups():
-			g.remove(x)
-	group.empty()
+def clear_b(groups=[],pointify=False):
+	all_points = 0
 
 	logging("Clearing screen...","std")
+
+	for group in groups:
+		for x in group.sprites():
+			if pointify: # Give player points for every bullet left on-screen
+				# player.score += 1000
+				all_points += 1000
+
+			for g in x.groups():
+				g.remove(x)
+
+			del x
+
+		group.empty()
+
+	return all_points
 
 def changeSpeed(bullet,endPos,newSpeed=None):
 	c_Speed = bullet.speed
@@ -207,10 +235,10 @@ def changeSpeed(bullet,endPos,newSpeed=None):
 
 def shutdown():
 	logging("Shutting down pygame...", "std")
-	print "Shutting down pygame..."
+	# print "Shutting down pygame..."
 	pygame.quit()
 	logging("Pygame has shut down successfully!", "std")
-	print "Pygame has shut down successfully!"
+	# print "Pygame has shut down successfully!"
 
 	debugUnInit()
 
@@ -244,14 +272,29 @@ def symbol(integer,img,pos,screen):
 	size[0] += 	5
 	size[0] *= 	integer
 
+	if size[0] < 0:
+		size[0] = 0
+
 	ipos = img.get_width() + 5
+	
+	try:
+		x = pygame.Surface(size,pygame.SRCALPHA,32)
 
-	x = pygame.Surface(size,pygame.SRCALPHA,32)
+		for i in range(integer):
+			x.blit(img,((ipos*i),0))
 
-	for i in range(integer):
-		x.blit(img,((ipos*i),0))
+		screen.blit(x,pos)
+	except BaseException as e:
+		logging("An error occurred while trying to display GUI information.","err","\n".join([str(type(e)),str(e)]))
 
-	screen.blit(x,pos)
+		size[0] = 0
+
+		x = pygame.Surface(size,pygame.SRCALPHA,32)
+
+		for i in range(integer):
+			x.blit(img,((ipos*i),0))
+
+		screen.blit(x,pos)
 
 def dispText(text,surf,pos,fontObj,color=BLACK):
 	f = fontObj.render(text,True,color)
@@ -277,6 +320,74 @@ def move(moveList,direction,sprite):
 
 	return [d_move,u_move,l_move,r_move]
 
+def sprite_sheet(size,filename,pos=(0,0),path=getSetting('path_anim')):
+    #Initial Values
+    len_sprt_x,len_sprt_y = size #sprite size
+    sprt_rect_x,sprt_rect_y = pos #where to find first sprite on sheet
+
+    # sheet = pygame.image.load(filename).convert_alpha() #Load the sheet
+    sheet = loadImage(filename,path=path)
+
+    # len_sprt_x = sheet.get_width()/size[0]
+    # len_sprt_y = sheet.get_height()/size[1]
+
+    sheet_rect = sheet.get_rect()
+    sprites = []
+    # print sheet_rect.height, sheet_rect.width
+    for i in range(0,sheet_rect.height-len_sprt_y,size[1]):#rows
+        # print "row"
+        for i in range(0,sheet_rect.width-len_sprt_x,size[0]):#columns
+            # print "column"
+            sheet.set_clip(pygame.Rect(sprt_rect_x, sprt_rect_y, len_sprt_x, len_sprt_y)) #find sprite you want
+            sprite = sheet.subsurface(sheet.get_clip()) #grab the sprite you want
+            sprites.append(sprite)
+            sprt_rect_x += len_sprt_x
+
+        sprt_rect_y += len_sprt_y
+        sprt_rect_x = 0
+    # print sprites
+
+    logging("Successfully loaded spritesheet " + filename, "std")
+    return sprites
+
+def infoPrint(str_info,data_info):
+	new_info = []
+	n = (OVERPOS[0] + 10 + OVERLAX, 50) #Y position of information
+
+	for i in str_info:
+		loc = str_info.index(i)
+
+		x = i + str(data_info[loc])
+		m = fontObj.render(x,True,WHITE)
+
+		if i == "Player":
+			ppos = list(n)
+			ppos[0] += m.get_width() + 10
+			ploc = loc
+		elif i == "Bomb":
+			bpos = list(n)
+			bpos[0] += m.get_width() + 10
+			bloc = loc
+
+		new_info.append(m)
+
+	for i in new_info:
+		screen.blit(i,n)
+		if new_info.index(i) == ploc:
+			ppos[1] = n[1]
+		elif new_info.index(i) == bloc:
+			bpos[1] = n[1]
+
+		n = (n[0],n[1]+new_info[1].get_height() + 10)
+
+	x = "POWER: " + str(player.getPower())
+	i = fontObj.render(x,True,WHITE)
+	screen.blit(i,n)
+
+	symbol(player.life,LIFE_IMG,ppos,screen)
+	symbol(player.bombs,BOMB_IMG,bpos,screen)
+
+#This old timer is no longer being used, but will be left here until it has been completely deprecated
 class Timer(object):
 	def __init__(self,maxTime):
 		"""Timer class that returns True when finished
@@ -284,15 +395,19 @@ class Timer(object):
 		"""
 		self.clock = pygame.time.Clock()
 
-		self.maxTime = maxTime
-		self.timing = False
+		self.maxTime = 	maxTime
+		self.timing = 	False
+		self.pause = 	False
 		self.lastTime = 0
-		self.timed = 0
+		self.timed = 	0
 		self.finished = False
 
 	def startTimer(self):
-		self.reset()
-		self.timing = True
+		if not self.pause:
+			self.reset()
+
+		self.timing = 	True
+		self.pause = 	False
 		self.lastTime = pygame.time.get_ticks()
 
 		print self.timing
@@ -308,7 +423,7 @@ class Timer(object):
 			if self.timed >= self.maxTime:
 				self.finished = True
 
-	def dispTime(self,pos,surf,font,color=BLACK,cutoff=0):
+	def dispTime(self,pos,surf,font,color=BLACK,cutoff=0,count=1):
 		time = float(self.maxTime - self.timed)/1000
 		time = str(time)
 
@@ -325,16 +440,25 @@ class Timer(object):
 		self.maxTime = newMax
 
 	def reset(self):
-		self.timing = False
-		self.timed = 0
+		self.timing = 	False
+		self.timed = 	0
 		self.finished = False
+		self.pause = 	False
 		self.lastTime = pygame.time.get_ticks()
 		print "RESET"
 
 	def getTime(self):
 		return self.timed
 
+	def getTimePassed(self):
+		passed = self.maxTime - self.timed
+		return passed
+
 	def isFinished(self):
 		return self.finished
+
+	def pauseTimer(self):
+		self.timing = False
+		self.pause = True
 
 nuclear = u'\u2622'

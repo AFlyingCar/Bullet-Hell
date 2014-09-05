@@ -11,7 +11,7 @@ class Timer(object):
         self.maxTime = maxTime
         self.timing = False
         self.finished = False
-        self.lastTime = 0
+        self.lastTime = 0.0
         self.ctime = pygame.time.get_ticks()
         self.time_thread = threading.Thread(target = self.timer)
         self.time_thread.daemon = True
@@ -27,6 +27,7 @@ class Timer(object):
                     self.timed += 1
                     self.lastTime = self.ctime
 
+                #Check if time is up
                 if self.timed >= self.maxTime:
                     self.finished = True
 
@@ -39,7 +40,7 @@ class Timer(object):
         self.timing = False
         self.ctime = pygame.time.get_ticks()
 
-    def dispTime(self,pos,font,surf,cutoff=0,color=BLACK,count=1):
+    def dispTime(self,pos,surf,font,color=BLACK,cutoff=0,count=1):
         ''' pos      <- list render position
             font     <- font to render text in
             surf     <- surface  to render to

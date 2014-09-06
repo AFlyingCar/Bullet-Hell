@@ -38,6 +38,7 @@ class Spritey(pygame.sprite.Sprite):
 		pygame.draw.circle(self.image,RED,(5,5),5)
 
 		self.isDead = False
+		self.showHB = False
 
 		self.bulletGroup = pygame.sprite.Group()
 
@@ -120,6 +121,16 @@ class Spritey(pygame.sprite.Sprite):
 		for b in bullets:
 			self.bulletGroup.add(b)
 
+	def showHitBox(self,show=False):
+		self.showHB = show
+
+		if show:
+			self.image.fill(BLACK)
+		else:
+			size = self.image.get_size()
+			del self.image
+			self.image = pygame.Surface(size,pygame.SRCALPHA,32)
+
 class Player(Spritey):
 	def __init__(self,num,maxs,sprite,life):
 		Spritey.__init__(self,num,life=life)
@@ -181,6 +192,9 @@ class Player(Spritey):
 
 		if self.god: 	logging("Activating God mode...","std")
 		else: 			logging("Deactivating God mode...","std")
+
+	def isGod(self):
+		return self.god
 
 	def bomb(self,nei,nei2,nei3,nei4):
 		'''Since bomb is broken currently, I'm making sure that it doesn't work ever. This will prevent the program from crashing every time it is run.'''
@@ -543,7 +557,10 @@ class boss(Spritey):
 	def kill(self):
 		self.clife += 1
 
-		self.setLife(self.lifes[self.clife])
+		if self.clife > (len(self.lifes)-1):
+			self.permaKill()
+		else:
+			self.setLife(self.lifes[self.clife])
 
 		self.maxLife = self.life
 
@@ -593,6 +610,11 @@ class boss(Spritey):
 		# self.spellTimer.dispTime((OVERLAX/2-20,5),overlay,fontObj,cutoff=1)
 
 		self.update()
+
+	def permaKill(self):
+		for i in self.groups():
+			i.remove(self)
+		del self
 
 class dot_boss(boss):
 	def __init__(self,font,num,life,lives,speed):

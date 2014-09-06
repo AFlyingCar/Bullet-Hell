@@ -7,3 +7,6 @@ Music/*
 Images/*
 Sound/*
 Fonts/*
+*.OLD*
+bin/lib/*.png
+build_*

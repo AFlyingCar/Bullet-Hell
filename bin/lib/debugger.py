@@ -93,7 +93,7 @@ def logging(message1, msg_type, message2=None,dflag=False,queue=False):
 		filename = genLogName()
 	try:
 		msg_time = "[" + ":".join([str(now.hour), str(now.minute), str(now.second)])
-		msg = message1
+		msg = str(message1)
 
 		if msg_type == "err": 		msg_type = " - ERROR]: "
 		elif msg_type == "warn": 	msg_type = " - WARNING]: "

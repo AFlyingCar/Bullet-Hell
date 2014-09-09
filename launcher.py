@@ -7,7 +7,7 @@ from bin.lib.basic import shutdown
 from bin.lib.settings import *
 from bin.lib.debugger import *
 from urllib2 import *
-import os,pygame
+import os,pygame,traceback
 
 def fontInit():
 	# fontPath = configReader()['path_font']
@@ -82,7 +82,8 @@ if __name__ == "__main__":
 			import main
 		except BaseException as e:
 			if type(e) != SystemExit:
-				error = ": ".join([type(e).__name__,str(e)])
+				# error = ": ".join([type(e).__name__,str(e)])
+				error = traceback.format_exc()
 				logging("A fatal error has occurred in the game, and it must be shut down.","err",error)
 				shutdown()
 

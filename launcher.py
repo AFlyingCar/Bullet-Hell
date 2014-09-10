@@ -7,7 +7,7 @@ from bin.lib.basic import shutdown
 from bin.lib.settings import *
 from bin.lib.debugger import *
 from urllib2 import *
-import os,pygame,traceback
+import os,pygame,traceback,ctypes
 
 def fontInit():
 	# fontPath = configReader()['path_font']
@@ -85,6 +85,11 @@ if __name__ == "__main__":
 				# error = ": ".join([type(e).__name__,str(e)])
 				error = traceback.format_exc()
 				logging("A fatal error has occurred in the game, and it must be shut down.","err",error)
+
+				if sys.platform == "win32":
+					ctypes.windll.user32.MessageBoxW(0,u'A fatal error has occurred in the game, and it must be shut down.'
+						+ ' See\n'+ str(getLogName()) + "\nfor more details.",u'Error', 0)
+				
 				shutdown()
 
 nuclear = u'\u2622'

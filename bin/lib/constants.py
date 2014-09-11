@@ -5,7 +5,7 @@
 
 from settings import *
 
-playerSpeed = getSetting("playerSpeed")
+# playerSpeed = getSetting("playerSpeed")
 
 ############
 #FILE PATHS#
@@ -30,8 +30,7 @@ PURPLE= (255,0,255)
 #####################
 
 IMG = 			('img-','.png')
-# SCREEN_SIZE = 	(640,480)
-SCREEN_SIZE = getSetting('screen_size')
+SCREEN_SIZE = 	getSetting('screen_size')
 
 #MAX-SIZE of the game overlay
 OVERSIZE =		(SCREEN_SIZE[0]-300,SCREEN_SIZE[1]-50)
@@ -40,12 +39,13 @@ OVERLAY =		OVERSIZE[1]
 
 #Position of the game overlay
 OVERPOS = 		(10,20)
-
-HEALTH_BAR = 	OVERLAX-30
 START_POS_1 = 	(1,1)
+
 # START_POS_2 = 	((OVERLAX-1)-loadImage("player.png").get_width(),1) #<-- makes sure the image doesn't start offscreen
 # print START_POS_2
 DIRECTION1 = 	[0,0] #boss movement
+
+HEALTH_BAR = 	OVERLAX-30
 
 FPS = 			60
 HI = 			0 #HI-Score, thscore.dat

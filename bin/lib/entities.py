@@ -6,12 +6,16 @@
 from globalVar import *
 from constants import *
 from sprites import *
+from players import *
+from enemies import *
 
 ##########
 # PLAYER #
 ##########
 
-player = Player([posx,OVERLAY-5],speed,PLAYER1_IMG,2)
+# player = Player([posx,OVERLAY-5],speed,PLAYER1_IMG,2)
+player = Alraune([posx,OVERLAY-5])
+playerGroup.add(player)
 
 ##########
 # BOSSES #
@@ -19,7 +23,8 @@ player = Player([posx,OVERLAY-5],speed,PLAYER1_IMG,2)
 
 #Set the boss's life to any positive integer, but I'm leaving it at 100 right now for testing
 # Note: Setting it to a negative integer means an instant win
-boss = dot_boss(fontObj,[posx,40],life=100,lives=2,speed=[-2,0])
+boss = VivianJames([posx,40],life=100,lives=3)
+bossGroup.add(boss)
 
 ###########
 # ENEMIES #

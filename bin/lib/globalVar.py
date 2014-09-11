@@ -4,12 +4,14 @@
 # A file holding all global variables. Similar to constants
 
 import pygame,os
+from settings import *
 from constants import *
 
 #Need to initialize this so that we can have access to fonts from anywhere
 pygame.font.init()
 
-speed = 		playerSpeed
+speed = 		getSetting("playerSpeed")
+playerdamage =	getSetting("playerDmg")
 
 messages = 		{} #{<fontObj>:<pos>} <-- This may be deprecated soon...
 bomb_name = 	""

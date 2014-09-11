@@ -22,6 +22,7 @@ POWER0_IMG = 	loadImage("img_power-0.png")
 POWER1_IMG = 	loadImage("img_power-1.png")
 S_BKG = 		loadImage("img-s_bkg.png")
 PLAYER1_IMG = 	loadImage("player.png")
+BOSS11_IMG = 	loadImage("Boss-1.png")
 
 	#########
 	#Bullets#

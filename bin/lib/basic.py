@@ -8,7 +8,6 @@ from pygame.locals import *
 from globalVar import *
 from debugger import *
 from settings import *
-# from entities import *
 from color import *
 
 s_init_check = False # <- Whether to check for an initialized mixer
@@ -387,8 +386,27 @@ def infoPrint(str_info,data_info):
 	symbol(player.life,LIFE_IMG,ppos,screen)
 	symbol(player.bombs,BOMB_IMG,bpos,screen)
 
+def spriteWallCollide(sprite):
+	'''Reverse sprite speed if it collides with the wall.'''
+
+	posx = sprite.rect.x
+	posy = sprite.rect.y
+
+	speed = sprite.speed
+
+	if posx <= 0:
+		speed[0] *= -1
+	if posx >= (OVERLAX-sprite.image.get_width()): 
+		speed[0] *= -1
+	if posy >= (OVERLAY-sprite.image.get_width()):
+		speed[1] *= -1
+	if posy <= 0:
+		speed[1] *= -1
+
+	return speed
+
 #This old timer is no longer being used, but will be left here until it has been completely deprecated
-class Timer(object):
+class TimerOLD(object):
 	def __init__(self,maxTime):
 		"""Timer class that returns True when finished
 		maxTime = time in milliseconds before ending

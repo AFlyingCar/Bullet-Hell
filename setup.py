@@ -14,7 +14,7 @@ def zipdir(path,zip):
 			print os.path.join(root,file)
 
 includes = ['bin\\','thcut.dat','license.txt','README.txt','config.cfg']
-packages = ["os","pygame","pygame.locals","random","sys","urllib2"]
+packages = ["os","pygame","pygame.locals","random","sys","urllib2","traceback","ctypes"]
 excludes = ["tkinter"]
 
 build_exe_options = {"packages":packages,"excludes":excludes,"include_files":includes}

@@ -6,130 +6,13 @@
 import pygame.sprite,random
 from debugger import logging
 from dependencies import *
-from constants import *
-from globalVar import *
 from spellcards import *
+from globalVar import *
+from constants import *
+from settings import *
+from Spritey import *
+from bullets import *
 from basic import *
-
-class Spritey(pygame.sprite.Sprite):
-	'''Sprite class that defines some basic methods'''
-	def __init__(self,num,life=3):
-		pygame.sprite.Sprite.__init__(self)
-
-		self.pos = num
-
-		#We've got to make sure that we keep track of the start position
-		self.start_pos = self.pos
-
-		# print self.pos
-
-		self.image = pygame.Surface((10,10),pygame.SRCALPHA,32)
-
-		######Rectangular hitbox of sprite######
-		self.rect = 	self.image.get_rect()
-		self.rect.x = 	self.pos[0]
-		self.rect.y = 	self.pos[1]
-
-		self.spritePos = [0,0]
-
-		self.life = 	life
-		self.maxLife = 	life
-
-		pygame.draw.circle(self.image,RED,(5,5),5)
-
-		self.isDead = False
-		self.showHB = False
-
-		self.bulletGroup = pygame.sprite.Group()
-
-	def shoot(self,group):
-		######Generic sprite shooting######
-		b = circleShot((self.rect.x,self.rect.y-30),(0,-30))
-		group.add(b)
-
-	def setLife(self,life):
-		logging("Changing " + str(self) + "'s health from " + str(self.life) + " to " + str(life),"std")
-		self.life = life
-
-	def addLife(self,life):
-		self.life += life
-		if life > 0:
-			logging(str(self) + " has gained a life!", "std", "Health is now " + str(self.life))
-
-	def setPos(self,pos):
-		self.pos = pos
-		self.rect.x = self.pos[0]
-		self.rect.y = self.pos[1]
-
-	def getPos(self):
-		x = self.rect.x
-		y = self.rect.y
-		return [x,y]
-
-	def drawSprite(self,surface):
-		pos = surf_center(self.sprite,self.image)
-		pos[0] = self.rect.x - pos[0]
-		pos[1] = self.rect.y - pos[1]
-
-		self.spritePos = pos
-
-		self.gRect = pygame.Rect(pos,self.sprite.get_size())
-
-		surface.blit(self.sprite,self.spritePos)
-
-	def update(self,speed):
-		######Generic sprite position updater######
-		self.rect.x += speed[0]
-		self.rect.y += speed[1]
-
-	def returnToStart(self):
-		self.setPos(self.start_pos)
-
-	def getIsDead(self):
-		return self.isDead
-
-	def idle(self):
-		'''Stuff to run while the program is running. (E.X: Checking health)'''
-
-		if self.life <= 0:
-			self.kill()
-
-	def kill(self):
-		if self.life <= self.maxLife:
-			# logging("Killing " + str(self) + "!", "std")
-			for g in self.groups():
-				g.remove(self)
-
-			del self
-
-	def followRect(self,rect):
-		if self.rect.x < rect.x:
-			self.rect.x += self.speed
-		elif self.rect.x > rect.x:
-			self.rect.x -= self.speed
-
-		else: self.rect.x += 0
-
-		if self.rect.y < rect.y:
-			self.rect.y += self.speed
-		elif self.rect.y > rect.y:
-			self.rect.y -= self.speed
-
-		else: self.rect.y += 0
-
-	def addBullet(self,bullets=[]):
-		for b in bullets:
-			self.bulletGroup.add(b)
-
-	def showHitBox(self,show=False):
-		self.showHB = show
-
-		if show:
-			self.image.fill(BLACK)
-		else:
-			size = self.image.get_size()
-			del self.image
-			self.image = pygame.Surface(size,pygame.SRCALPHA,32)
 
 class Player(Spritey):
 	def __init__(self,num,maxs,sprite,life):
@@ -141,6 +24,7 @@ class Player(Spritey):
 		self.maxBombs = 10
 		self.maxLife = 	10
 		self.maxPower = 300
+		self.damage = 	playerdamage
 
 		self.bombs = self.defBombs
 
@@ -273,7 +157,6 @@ class Player(Spritey):
 		 	self.god = True
 			self.bombs = self.defBombs
 		 	self.death_time = float(pygame.time.get_ticks())/1000
-		 	self.addLife(-1)
 
 		 	self.cLife = self.life
 
@@ -302,8 +185,6 @@ class Player(Spritey):
 
 			self.isDead = True
 
-			self.kill()
-
 			stopMusic()
 			lose = True
 
@@ -312,11 +193,15 @@ class Player(Spritey):
 			self.maxPointColl *= 4
 			playSound(LIFE_UP_S)
 
+		if self.shooting and not self.playerbomb:
+			self.shoot()
+
 		self.death_anim.idle()
 		anim_pos = self.spritePos
 		self.death_anim.setPos(anim_pos)
+		self.uponDeath()
 
-	def shoot(self,group):
+	def shoot(self,group=None):
 		bullet_list = []
 
 		if self.power >= self.maxPower:
@@ -368,18 +253,10 @@ class Player(Spritey):
 		self.bulletGroup.add(bullet_list)
 
 	def graze(self,group):
-		# for i in boss.bulletGroup.sprites():
-		# 	if i.gRect.colliderect(self.rect) and not i.rect.colliderect(self.rect):
-		# 		self.grazep += 1
-		# 		return 100
-
-		# return 0
-
 		for i in group.sprites():
 			if i.gRect.colliderect(self.rect) and not i.rect.colliderect(self.rect) and not i.grazed:
 				#For some reason, graze points are increasing by two
 				self.grazep += 1
-				# self.grazep -= 1
 				i.grazed = True
 				self.score += 100
 
@@ -406,62 +283,24 @@ class Player(Spritey):
 
 		return True
 
-class Bullet(Spritey):
-	def __init__(self,num,img,speed,playerb=False):
-		Spritey.__init__(self,num,life=1)
+	def uponDeath(self):
+		if self.isDead:
+			x = fontObj.render('YOU LOSE!',True,BLACK)
+			overlay.blit(x,surf_center(overlay,x))
 
-		self.sprite = loadImage(img)
-
-		size = [int(self.sprite.get_width()/2)-5,int(self.sprite.get_height()/2)-5]
-
-		if size[0] <= 0: size[0] = 0 + 5
-		if size[1] <= 0: size[0] = 0 + 5
-
-		if playerb: size = self.sprite.get_size()
-
-		self.image = pygame.Surface(size,pygame.SRCALPHA,32)
-		# self.image = pygame.Surface(size)
-
-		self.rect = self.image.get_rect()
-		self.rect.x = self.pos[0]
-		self.rect.y = self.pos[1]
-		self.speed = speed
-
-		self.gRect = pygame.Rect((0,0),self.sprite.get_size())
-
-		self.playerb = playerb
-
-		self.grazed = False
-
-	def update(self):
-		self.rect.x += self.speed[0]
-		self.rect.y += self.speed[1]
-
-	def turn(self,degrees):
-		'''This will allow a bullet to turn by a certain amout of degrees, changing it's direction and speed.'''
-		pass
-
-class circleShot(Bullet):
-	def __init__(self,num,speed,playerb=False):
-		Bullet.__init__(self,num,BULL2,speed,playerb=playerb)
-
-class needleShot(Bullet):
-	def __init__(self,num,speed,playerb=False):
-		Bullet.__init__(self,num,BULL1,speed,playerb=playerb)
-
-class genericLaser(Bullet):
-	def __init__(self,num,img,playerb=False):
-		bullet.__init__(self,num,img,speed=0,playerb=playerb)
+			self.speed = 0
+			self.sprite = pygame.Surface((1,1))
 
 class boss(Spritey):
-	def __init__(self,font,num,img,life=100,lives=1):
+	def __init__(self,num,img,life=100,lives=1):
 		Spritey.__init__(self,num,life=life)
 		self.lives = lives
-		self.spellFont = font
+		self.spellFont = fontObj
 
-		self.spell = 1
+		self.spell = 0
 
-		self.spells = [self.shoot]
+		spell1 = SpellCard(10000,"",self,self.bulletGroup)
+		self.spells = [spell1]
 
 		self.image = loadImage(img)
 
@@ -474,50 +313,17 @@ class boss(Spritey):
 
 		self.last_time = pygame.time.get_ticks()
 
-		self.pwr = {'p':0}
-
 		self.clife = 0
 
-		self.lifes = [self.maxLife]
+		self.ctimer = None
 
-		self.spellTimer = Timer(2500)
-
-		# self.spellTimer.startTimer()
-
-		self.last_time = pygame.time.get_ticks()/1000
-
-	def shoot(self,atak,group,surf):
-		#Fire a bullet every second
-		self.spellTimer.timer()
-
-		if self.spellTimer.isFinished():
-			self.kill()
-
-		if pygame.time.get_ticks()/1000 - self.last_time >= 1:
-			self.last_time = pygame.time.get_ticks()/1000
-			
-			for i in range(atak):
-				start = surf_center(self.image,BULL2)
-				start[0] += self.rect.x
-				start[1] += self.rect.y
-
-				if i is 1:
-					b = circleShot(start,(0,5))
-				elif i is 2:
-					b = circleShot(start,(0,-5))
-				elif i is 3:
-					b = circleShot(start,(-5,0))
-				elif i is 4:
-					b = circleShot(start,(5,0))
-				else:
-					b = circleShot(start,(0,5))
-
-				group.add(b)
+		self.fighting = False
 
 	def dispLife(self,surface):
-		start = (5*self.lives,5)
-		percent = float(self.life)/float(self.maxLife)
-		end = (start[0] + float(HEALTH_BAR*percent),5)
+		start = 	(5*self.lives,5)
+
+		percent = 	float(self.life)/float(self.maxLife)
+		end = 		(start[0] + float(HEALTH_BAR*percent),5)
 	
 		for l in range(self.lives-1):
 			#display all health bars
@@ -528,161 +334,133 @@ class boss(Spritey):
 	def dropItem(self):
 		dropList = []
 
-		for i in self.pwr:
+		drops = self.spells[self.spell].getDrops()
+
+		# for i in self.pwr:
+		for item,size in drops.iteritems():
 			newPos = (random.randint(self.rect.x-20,self.rect.x+20),self.rect.y)
-			if i == 'p':
-				d = Powerup(self.pos[0],self.pos[1],newPos,self.pwr[i])
-				# powerGroup.add(p)
 
-			elif i == 's':
-				d = PointItem(self.pos[0],self.pos[1],newPos)
-				# scoreGroup.add(s)
+			if item == 'p': 	d = Powerup(self.pos[0],self.pos[1],newPos,size)
+			elif item == 's': 	d = PointItem(self.pos[0],self.pos[1],newPos)
+			elif item == 'l': 	d = Lifeup(self.pos[0],self.pos[1],newPos)
+			elif item == 'b': 	d = Bombup(self.pos[0],self.pos[1],newPos)
 
-			elif i == 'l':
-				d = Lifeup(self.pos[0],self.pos[1],newPos)
-				# lifeGroup.add(l)
-
-			elif i == 'b':
-				d = Bombup(self.pos[0],self.pos[1],newPos)
-				# bombupGroup.add(b)
-
-			else:
-				logging("Invalid item token '" + i + "'", "err")
-				# print "ItemError: Invalid token '" + i + "'"
+			else:				logging("Invalid item token '" + i + "'", "err")
 
 			dropList.append(d)
 
-		return dropList
+		for d in dropList:
+			if type(d) == 	Powerup: 	powerGroup.add(d)
+			elif type(d) == PointItem: 	scoreGroup.add(d)
+			elif type(d) == Lifeup: 	lifeGroup.add(d)
+			elif type(d) == Bombup: 	bombupGroup.add(d)
+			else: logging("[Unknown item: "+ str(type(d)) +"]","err")
+
+	def StartBossFight(self):
+		self.fighting = True
+
+	def endBossFight(self):
+		self.fighting = False
 
 	def kill(self):
-		self.clife += 1
-
-		if self.clife > (len(self.lifes)-1):
-			self.permaKill()
-		else:
-			self.setLife(self.lifes[self.clife])
-
-		self.maxLife = self.life
-
-		self.lives -= 1
-		self.spell += 1
-
-		if not self.isDead:
-			clear_b(groups=[self.bulletGroup])
-
-		logging(str(self) + " has died!", "std","Remaining lives: " + str(self.lives))
-
-		self.spellTimer.startTimer()
-
-		return self.dropItem()
-
-	def attack(self,surf,args=[]):
-		card = self.maxLives - self.lives
-
-		if card == 1:
-			# self.bulletGroup = self.spells[card].getBGroup()
-			for b in self.spells[card].getBGroup():
-				if b not in self.bulletGroup.sprites():
-					self.bulletGroup.add(b)
-
-			return self.spells[card].idle()
-
-		if args == []:
-			self.spells[card](self.bulletGroup)
-		else:
-			self.spells[card](args,self.bulletGroup,surf)
-
-	def idle(self,args={}):
-		for arg in args:
-			if arg == "player":
-				player = args[arg]
-
 		if self.life < 0:
+			self.dropItem()
+
+			if self.spell + 1 > (len(self.spells)-1):
+				self.isDead = True
+				return
+
+			self.getNewLife()
+
+			self.spells[self.spell].stopCard()
+
+			self.life = self.maxLife
+
+			self.lives -= 1
+			self.spell += 1
+			self.clife += 1
+
+			if not self.isDead:
+				clear_b(groups=[self.bulletGroup])
+
+			logging(str(self) + " has died!", "std","Remaining lives: " + str(self.lives))
+
+	def attack(self,args=[]):
+		card = self.spell
+
+		if args:
+			self.spells[card].idle(*args)
+		else:
+			self.spells[card].idle()
+
+	def idle(self,args=[]):
+		if self.fighting:
+			self.attack(args)
+
+			# if self.life < 0:
+			# 	self.kill()
+
 			self.kill()
 
-		# if pygame.sprite.spritecollide(self,player.bulletGroup):
-		if False:
-			self.addLife(-1)
-			player.score += 10
+			if self.spell > self.maxLives:
+				self.isDead = True
 
-		#display boss health bar
-		self.dispLife(overlay)
-		# self.spellTimer.dispTime((OVERLAX/2-20,5),overlay,fontObj,cutoff=1)
+			if self.lives < 0:
+				self.permaKill()
+				return
 
-		self.update()
+			#display boss health bar
+			self.dispLife(overlay)
+
+			self.update()
+		
+		self.uponDeath()
+
+	def getSpellBKG(self):
+		'''Return the current spellcard's custom background.'''
+		bkg = self.spells[self.spell].getSpellBKG()
+
+		overlay.blit(bkg,(0,0))
+
+	def uponDeath(self):
+		if self.isDead:
+			for b in self.bulletGroup.sprites():
+				b.kill()
+
+			self.rect.x = overlay.get_width()+10
+			self.rect.y = overlay.get_height()+10
+
+			x =    fontObj.render('YOU WIN!',True,BLACK)
+			pos =  surf_center(overlay,x)
+
+			overlay.blit(x,pos)
+
+			stopMusic()
+			# self.spells[self.spell].stopCard()
+			self.endBossFight()
 
 	def permaKill(self):
 		for i in self.groups():
 			i.remove(self)
-		del self
 
-class dot_boss(boss):
-	def __init__(self,font,num,life,lives,speed):
-		boss.__init__(self,font,num,"Boss-1.png",life=life,lives=lives)
-		self.speed = speed
-
-		spell1 = LargeEX(self,self.bulletGroup)
-
-		self.spells.append(spell1)
-		self.spells.append(self.shoot)
-
-		self.pwr = {'p':0,'p':1,'s':0,'p':0}
-
-		self.lifes.append(1500)
-
-	def spell1(self,speed,group,surf):
-		self.spellTimer.setMax(30000)
-		if self.spellTimer.isFinished():
-			self.kill()
-
-		self.spellTimer.timer()
-
-		self.pwr = {'p':0,'p':1,'s':0,'p':0,'p':1,'l':0}
-
-		name = 				 self.spellFont.render("EX Sign: Generic Danmaku",True,BLACK)
-		pos = 				(OVERLAX-(name.get_width()+5),10)
-		# messages[name] =	 pos
-
-		self.speed = 		[0,0]
-
-		newPos = [surf_center(surf,self.image)[0],10]
-
-		if self.rect.x < newPos[0]: self.rect.x += speed
-		if self.rect.x > newPos[0]: self.rect.x -= speed
-		if self.rect.y < newPos[1]: self.rect.y += speed
-		if self.rect.y > newPos[1]: self.rect.y -= speed
-
-		spawn2 = [0,0]
-		spawn3 = [OVERLAX-40,0]
-		self.shoot(5,group,surf)
-
-		ctime = float(pygame.time.get_ticks())/1000 - float(self.last_time)/1000
-
-		if ctime >= 0.3:
-			b = circleShot(spawn2,(5,5))
-			b2 = circleShot(spawn3,(-5,5))
-
-			self.last_time = pygame.time.get_ticks()
-
-			group.add(b)
-			group.add(b2)
+		self.rect.x = -10
+		self.rect.y = -10
+		# del self
 
 	def update(self):
+		self.speed = spriteWallCollide(self)
+
 		self.rect.x += self.speed[0]
 		self.rect.y += self.speed[1]
 
-		if self.rect.x <= 0:
-			self.speed[0] *= -1
-			self.rect.x += self.speed[0]
-		if self.rect.x >= (OVERLAX-self.image.get_width()): 
-			self.speed[0] *= -1
-			self.rect.x += self.speed[0]
-		if self.rect.y >= (OVERLAY-self.image.get_width()):
-			self.speed[1] *= -1
-			self.rect.y += self.speed[1]
-		if self.rect.y <= 0:
-			self.speed[1] *= -1
-			self.rect.y += self.speed[1]
+	def getNewLife(self):
+		if False:
+			self.clife >= len(self.lifes)
+			self.permaKill()
+		else:
+			pass
+		
+		self.spells[self.spell-1].getNewLife() # THIS IS EXPERIMENTAL
 
 class laser(Bullet):
 	def __init__(self,x,y,num,life,img,speed,playerb=False):
@@ -875,48 +653,3 @@ class Anim(Spritey):
 				self.finished = True
 
 nuclear = u'\u2622'
-
-class LargeEX(SpellCard):
-	def __init__(self,owner,ownerGroup,playerb=False):
-		SpellCard.__init__(self,30000,"Large X: Generic Danmaku",owner,ownerGroup)
-
-		self.spawn2 = [0,0]
-		self.spawn3 = [OVERLAX-40,0]
-		self.ctime = float(pygame.time.get_ticks())/1000
-		self.last_time = self.ctime
-		# self.ctime = self.timer.getTimePassed()
-
-		self.spellBKG = loadImage("SpellBKG.png",fail_size=OVERSIZE)
-
-		self.playerb = playerb
-
-	def Card(self):
-		if self.start:
-			newPos = [surf_center(overlay,self.owner.image)[0],10]
-			
-			self.changeOwnerPos(5,newPos)
-			self.owner.speed = [0,0]
-
-			name_size = fontObj.render(self.name,True,BLACK).get_width()
-			pos = (OVERLAX-(name_size+5),10)
-			self.dispName(pos)
-
-			self.ctime = float(pygame.time.get_ticks())/1000
-
-			if self.ctime - self.last_time >= 0.3:
-				b2 = circleShot(self.spawn2,(5,5),self.playerb)
-				b = circleShot(self.spawn3,(-5,5),self.playerb)
-
-				self.last_time = self.ctime
-
-				self.ownerGroup.add(b)
-				self.ownerGroup.add(b2)
-
-	def idle(self):
-		self.runCard()
-		self.dispTime((OVERLAX/2-20,5),overlay,fontObj,cutoff=1)
-
-		return self.ChangeBKG(self.spellBKG)
-
-	def getBGroup(self):
-		return self.ownerGroup

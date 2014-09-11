@@ -139,6 +139,15 @@ def parseQueue():
 
 		logging(msg,messageQueue[msg],message2=message2,queue=True)
 
+def getLogName():
+	if isDebugInit():
+		tmpcfg_path = os.path.join(os.path.abspath(os.getcwd()),"config.tmpcfg")
+		filename = open(tmpcfg_path,'r').read().split("\n")[0].split("=")[1]
+	else:
+		filename = genLogName()
+
+	return filename
+
 if __name__ == "__main__":
 	#For testing purposes only
 	filename = debugInit()

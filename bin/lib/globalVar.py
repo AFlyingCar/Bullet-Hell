@@ -34,6 +34,8 @@ x = 			20
 y = 			25
 cooldown = 		0
 last_time = 	0
+current_boss = 	0
+current_playr = getSetting("player")
 
 d_move = False
 u_move = False

@@ -52,13 +52,14 @@ def loadAnim(animName):
 
 ######Load sounds from ./Sound and returns an error if the file was not found,
 ###### or if pygame.mixer was not initialized
-def loadSound(filename):
+def loadSound(filename,volume=1.0):
 	# path = os.path.join(os.getcwd(),"Sound",filename)
 	path = os.path.join(getSetting('path_sound'),filename)
 
 	if os.path.exists(path):
 		if pygame.mixer.get_init():
 			s = pygame.mixer.Sound(path)
+			s.set_volume(volume)
 			logging("Successfully loaded " + filename,"std")
 			return s
 
@@ -87,14 +88,14 @@ def loadSound(filename):
 		logging("Directory -> " + path + " does not exist!", "err")
 		return "err"
 
-def playSound(filename):
+def playSound(filename,volume=1.0):
 	if getSetting('enable_sound'):
 		if pygame.mixer.get_init():
 			if type(filename) is pygame.mixer.Sound:
 				filename.play()
 
 			elif type(filename) is str:
-				s = loadSound(filename)
+				s = loadSound(filename,volume)
 
 				if s == "err":
 					pass
@@ -118,7 +119,7 @@ def stopSound(sound=None):
 	else:
 		pygame.mixer.stop()
 
-def loadMusic(filename):
+def loadMusic(filename,volume=1.0):
 	# path = os.path.join(os.getcwd(),"Music",filename)
 	path = os.path.join(getSetting("path_music"),filename)
 
@@ -128,6 +129,7 @@ def loadMusic(filename):
 	if os.path.exists(path):
 		if pygame.mixer.get_init():
 			pygame.mixer.music.load(path)
+			pygame.mixer.music.set_volume(float(volume))
 			return True
 		else:
 			# print "Mixer not initialized!"
@@ -153,8 +155,8 @@ def loadMusic(filename):
 		# print "Path:", path, "does not exist!"
 		logging("Directory -> " + path + " does not exist!", "err")
 
-def playMusic(filename):
-	s = loadMusic(filename)
+def playMusic(filename,volume=1.0):
+	s = loadMusic(filename,volume)
 
 	if s:
 		pygame.mixer.music.play(-1)
@@ -405,78 +407,11 @@ def spriteWallCollide(sprite):
 
 	return speed
 
-#This old timer is no longer being used, but will be left here until it has been completely deprecated
-class TimerOLD(object):
-	def __init__(self,maxTime):
-		"""Timer class that returns True when finished
-		maxTime = time in milliseconds before ending
-		"""
-		self.clock = pygame.time.Clock()
+def runIdle(sprites={}):
+	'''{sprite:[args]}'''
+	for sprite in sprites:
+		args = sprites[sprite]
+		sprite.idle(*args)
 
-		self.maxTime = 	maxTime
-		self.timing = 	False
-		self.pause = 	False
-		self.lastTime = 0
-		self.timed = 	0
-		self.finished = False
-
-	def startTimer(self):
-		if not self.pause:
-			self.reset()
-
-		self.timing = 	True
-		self.pause = 	False
-		self.lastTime = pygame.time.get_ticks()
-
-		print self.timing
-
-	def timer(self):
-		ctime = pygame.time.get_ticks()
-
-		if self.timing:
-			if ctime-self.lastTime >= 1:
-				self.timed += 1
-				self.lastTime = ctime
-
-			if self.timed >= self.maxTime:
-				self.finished = True
-
-	def dispTime(self,pos,surf,font,color=BLACK,cutoff=0,count=1):
-		time = float(self.maxTime - self.timed)/1000
-		time = str(time)
-
-		if len(str(time)) <= 3:
-			time = str(0) + time
-
-		if cutoff:
-			time = time[:-cutoff]
-
-		ftime = font.render(str(time),True,color)
-		surf.blit(ftime,pos)
-
-	def setMax(self,newMax):
-		self.maxTime = newMax
-
-	def reset(self):
-		self.timing = 	False
-		self.timed = 	0
-		self.finished = False
-		self.pause = 	False
-		self.lastTime = pygame.time.get_ticks()
-		print "RESET"
-
-	def getTime(self):
-		return self.timed
-
-	def getTimePassed(self):
-		passed = self.maxTime - self.timed
-		return passed
-
-	def isFinished(self):
-		return self.finished
-
-	def pauseTimer(self):
-		self.timing = False
-		self.pause = True
 
 nuclear = u'\u2622'

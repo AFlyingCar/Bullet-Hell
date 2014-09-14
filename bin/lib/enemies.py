@@ -9,7 +9,7 @@ from dependencies import *
 
 class VivianJames(boss):
 	def __init__(self,num,life,lives):
-		boss.__init__(self,num,BOSS11_IMG,life=life,lives=lives)
+		boss.__init__(self,num,BOSS11_IMG,"th00_02.ogg",life=life,lives=lives)
 		self.speed = [0,0]
 
 		spell1 = LargeEX(self,self.bulletGroup)

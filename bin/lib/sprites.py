@@ -16,8 +16,13 @@ from basic import *
 
 class Player(Spritey):
 	def __init__(self,num,maxs,sprite,life):
+		'''Player class that defines the basics of what every player can do.
+		num 	<- (x,y)					<-- Starting position
+		maxs 	<- integer 					<-- Maximum speed
+		sprite 	<- string or Surface object <-- Sprite image to use
+		life 	<- integer 					<-- Starting number of lives
+		'''
 		Spritey.__init__(self,num,life=life)
-		self.power = 	0
 		self.grazep = 	0
 		self.power = 	1
 		self.defBombs = 4
@@ -35,7 +40,12 @@ class Player(Spritey):
 		self.focus = 	maxs/2
 		self.speed = 	self.default
 		
-		self.sprite = 	loadImage(sprite)
+		#Sprite is visible by default, but can be made invisible
+		self.visible = 			True
+
+		self.visibleSprite = 	loadImage(sprite)
+		self.invisSprite = 		pygame.Surface((1,1),pygame.SRCALPHA,32)
+		self.sprite = 			self.visibleSprite
 
 		self.death_time = 	0
 		self.score = 		0
@@ -60,6 +70,7 @@ class Player(Spritey):
 		self.lose = False
 
 	def update(self,direction):
+		'''Update the player's position based on their speed'''
 		self.rect.x += direction[0]
 		self.rect.y += direction[1]
 
@@ -72,12 +83,13 @@ class Player(Spritey):
 		self.coll_Rect.y = self.spritePos[1]+self.collideSize
 
 	def makeGod(self):
+		'''Toggle god mode'''
 		self.god = not self.god
 
-		if self.god: 	logging("Activating God mode...","std")
-		else: 			logging("Deactivating God mode...","std")
+		logging(("Activating" if self.god else "Deactivating") + " god mode...","std")
 
 	def isGod(self):
+		'''Return whether god mode is active.'''
 		return self.god
 
 	def bomb(self,nei,nei2,nei3,nei4):
@@ -136,6 +148,7 @@ class Player(Spritey):
 		# return fontObj.render(name,True,BLACK)
 
 	def setFocus(self,shift):
+		'''Toggle focus mode'''
 		if shift:
 			self.speed = self.focus
 			if not self.bombing: pygame.draw.circle(self.image,RED,(5,5),5)
@@ -145,12 +158,15 @@ class Player(Spritey):
 			self.image = pygame.Surface((10,10),pygame.SRCALPHA,32)
 
 	def getPower(self):
+		'''Get the current amount of power, using MAX if power is as high as possible.'''
 		if self.power >= self.maxPower: return "MAX"
 		else: 							return self.power
 
 	def setPower(self,point):
-		if point.lower() == "max": 	self.power = self.maxPower
-		else: 						self.power += point
+		'''Set power level, using max to set power as high as possible.'''
+		if type(point) == str:
+			if point.lower() == "max": 	self.power = self.maxPower
+		else: 							self.power += point
 
 	def kill(self,cause="Generic"):
 		if not self.god:
@@ -161,7 +177,7 @@ class Player(Spritey):
 		 	self.cLife = self.life
 
 		 	if not self.isDead:
-			 	playSound(P_DEATH_S)
+			 	playSound(P_DEATH_S,getSetting("soundVolume"))
 				logging("The player has died!","std","Cause: " + cause)
 				self.death_anim.playAnim(True)
 
@@ -191,10 +207,14 @@ class Player(Spritey):
 		if self.pointColl >= self.maxPointColl:
 			self.addLife(1)
 			self.maxPointColl *= 4
-			playSound(LIFE_UP_S)
+			playSound(LIFE_UP_S,getSetting("soundVolume"))
 
-		if self.shooting and not self.playerbomb:
+		if self.shooting and not self.playerbomb and not self.isDead:
 			self.shoot()
+
+		#Change whether the sprite is visible or not
+		if self.visible: 	self.sprite = self.visibleSprite
+		else: 				self.sprite = self.invisSprite
 
 		self.death_anim.idle()
 		anim_pos = self.spritePos
@@ -253,6 +273,7 @@ class Player(Spritey):
 		self.bulletGroup.add(bullet_list)
 
 	def graze(self,group):
+		'''Add points if grazing bullets.'''
 		for i in group.sprites():
 			if i.gRect.colliderect(self.rect) and not i.rect.colliderect(self.rect) and not i.grazed:
 				#For some reason, graze points are increasing by two
@@ -263,6 +284,7 @@ class Player(Spritey):
 		return 0
 
 	def collect(self,item):
+		'''What to do when collecting items.'''
 		if type(item) == PointItem:
 			self.score += item.sscore
 			self.pointColl += 1
@@ -271,6 +293,7 @@ class Player(Spritey):
 			if self.getPower() != "MAX":
 				self.score += item.pscore
 			else:
+				logging("NOT COLLECTING POWER","test")
 				return False
 
 		elif type(item) == Lifeup:
@@ -279,20 +302,34 @@ class Player(Spritey):
 		elif type(item) == Bombup:
 			self.bombs += 1
 
-		playSound(item.sound)
+		playSound(item.sound,getSetting("soundVolume"))
 
 		return True
 
 	def uponDeath(self):
+		'''What to do when the player dies.'''
 		if self.isDead:
 			x = fontObj.render('YOU LOSE!',True,BLACK)
 			overlay.blit(x,surf_center(overlay,x))
 
 			self.speed = 0
-			self.sprite = pygame.Surface((1,1))
+			# self.sprite = pygame.Surface((1,1))
+			if self.visible:
+				self.toggleVisible()
+
+	def toggleVisible(self):
+		'''Toggle sprite visibility.'''
+		logging("Toggling sprite visiblity...","std","Player is now " + ("visible" if not self.visible else "invisible"))
+		self.visible = not self.visible
 
 class boss(Spritey):
-	def __init__(self,num,img,life=100,lives=1):
+	def __init__(self,num,img,music,life=100,lives=1):
+		'''Base boss class.
+		num 		<- (x,y) 					<-- starting position
+		img 		<- string or Surface object <-- boss sprite
+		life=100 	<- integer 					<-- Starting life. 100 by default. [this may be deprecated]
+		lives=1 	<- integer 					<-- Maximum amount of lives the boss has. 1 by default
+		'''
 		Spritey.__init__(self,num,life=life)
 		self.lives = lives
 		self.spellFont = fontObj
@@ -318,6 +355,8 @@ class boss(Spritey):
 		self.ctimer = None
 
 		self.fighting = False
+
+		self.music = music
 
 	def dispLife(self,surface):
 		start = 	(5*self.lives,5)
@@ -357,9 +396,11 @@ class boss(Spritey):
 			else: logging("[Unknown item: "+ str(type(d)) +"]","err")
 
 	def StartBossFight(self):
+		'''Begin boss fight'''
 		self.fighting = True
 
 	def endBossFight(self):
+		'''End boss fight.'''
 		self.fighting = False
 
 	def kill(self):
@@ -461,6 +502,10 @@ class boss(Spritey):
 			pass
 		
 		self.spells[self.spell-1].getNewLife() # THIS IS EXPERIMENTAL
+
+	def getMusic(self):
+		'''Get the music that is supposed to play during the boss battle'''
+		return self.music
 
 class laser(Bullet):
 	def __init__(self,x,y,num,life,img,speed,playerb=False):
@@ -571,14 +616,15 @@ class Bombup(Item):
 		self.sound = BOMB_UP_S
 
 class Anim(Spritey):
-	def __init__(self,num,frames,speed=1,frame=0,play=True,times=1,fps=30):
+	def __init__(self,num,frames,speed=1,frame=0,play=True,times=1):
 		'''Animation sprite
 		num <- start position
 		frames <- list of images
 		speed <- integer for how fast to go through the frames
 		frame <- optional start frame
 		play <- run animation
-		times <- amount of times to run animation before stopping'''
+		times <- amount of times to run animation before stopping
+		'''
 		
 		Spritey.__init__(self,num,life=1)
 		
@@ -598,30 +644,41 @@ class Anim(Spritey):
 		self.timeStart = 0
 
 	def setSpeed(self,speed):
+		'''Set the speed of the animation.'''
 		self.speed = speed
 
 	def getFrame(self):
+		'''Get the current frame of the animation as a Surface object.'''
 		try:
 			return self.anim_frames[self.c_frame]
 		except BaseException:
 			return pygame.Surface((0,0),pygame.SRCALPHA)
 
 	def playAnim(self,play,repeat=False):
+		'''Start playing the animation.'''
 		self.play = play
 		self.finished = True
 
 		self.repeat = repeat
 
+	def resetAnim(self):
+		'''Reset the animation to the beginning frame.'''
+		self.c_frame = 0
+
 	def renderAnim(self):
+		'''Render the animation to the overlay.'''
 		overlay.blit(self.image,self.pos)
 
 	def isFinished(self):
+		'''Check if the animation has finished running through all frames.'''
 		return self.finished
 
-	def setRepeat(self,repeat):
-		self.repeat = repeat
+	def setRepeat(self):
+		'''Toggle repetition of the animation.'''
+		self.repeat = not self.repeat
 
 	def getRepeat(self):
+		'''Get if the animation is set to repeat.'''
 		return self.repeat
 
 	def idle(self):
@@ -631,11 +688,6 @@ class Anim(Spritey):
 			if self.c_frame > len(self.anim_frames):
 				self.c_frame = 0
 				self.times +=  1
-
-			# try:
-			# 	self.image = self.anim_frames[self.c_frame]
-			# except:
-			# 	self.image = pygame.Surface((0,0),pygame.SRCALPHA)
 
 			self.image = self.getFrame()
 

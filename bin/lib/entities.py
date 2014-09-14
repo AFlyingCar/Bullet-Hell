@@ -32,4 +32,9 @@ bossGroup.add(boss)
 
 #Enemies haven't been implemented yet, but they will be instantiated here. 
 
+for s in bossGroup.sprites():
+	all_sprites.add(s)
+for s in playerGroup.sprites():
+	all_sprites.add(s)
+
 nuclear = u'\u2622'

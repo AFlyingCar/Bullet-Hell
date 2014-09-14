@@ -75,19 +75,21 @@ if __name__ == "__main__":
 	success = initAll()
 
 	if not success:
-		print "Unable to load settings properly. Shutting down."
+		print "Unable to initialize properly. Shutting down."
 		shutdown()
 	else:
 		try:
+			pygame.mouse.set_visible(False)
 			import main
 		except BaseException as e:
 			if type(e) != SystemExit:
-				# error = ": ".join([type(e).__name__,str(e)])
+				prgname = getSetting('prg_name')
+
 				error = traceback.format_exc()
-				logging("A fatal error has occurred in the game, and it must be shut down.","err",error)
+				logging("Sorry.\n" + '-'*30 + "\nA fatal runtime error has occurred in " + prgname + ", and it must be shut down.","err",error)
 
 				if sys.platform == "win32":
-					ctypes.windll.user32.MessageBoxW(0,u'A fatal error has occurred in the game, and it must be shut down.'
+					ctypes.windll.user32.MessageBoxW(0,u'A fatal runtime error has occurred in ' + prgname + ', and it must be shut down.'
 						+ ' See\n'+ str(getLogName()) + "\nfor more details.",u'Error', 0)
 				
 				shutdown()

@@ -3,6 +3,8 @@
 *.zip
 *.tmpcfg
 *.log
+*.mp3
+*.wav
 Music/*
 Images/*
 Sound/*

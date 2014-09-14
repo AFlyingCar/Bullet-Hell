@@ -66,23 +66,29 @@ class Timer(object):
 		surf.blit(f_time,pos)
 
 	def stopTimer(self):
+		'''Keep checking if the timer is to be stopped now.'''
 		if self.finished:
 			self.timing = False
 
 	def setMax(self,newMax):
+		'''Set a new maximum time limit.'''
 		self.maxTime = newMax
 
 	def getTimePassed(self):
+		'''Get how much time has passed. (Used for counting up).'''
 		return float(self.timed)
 
 	def getTimeLeft(self):
+		'''Get how much time is left. (Used for counting down).'''
 		passed = self.maxTime - self.timed
 		return float(passed)
 
 	def isFinished(self):
+		'''Return whether the timer has finished counting.'''
 		return self.finished
 
 	def getTimeFont(self,font,color=BLACK,cutoff=0,count=0):
+		'''Get the font object the timer uses to display the time on-screen.'''
 		if count:   time = str(self.getTime()/1000)
 		else:       time = str(self.getTimePassed()/1000)
 
@@ -91,10 +97,12 @@ class Timer(object):
 		return font.render(time,True,color)
 
 	def pauseTimer(self):
+		'''Pause the timer temporarily, without resetting it.'''
 		self.timing = False
 		self.pause = True
 
 	def forceStop(self):
+		'''Force the timer to stop if it is currently counting.'''
 		if self.timing:
 			self.finished = True
 			self.reset()

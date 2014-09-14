@@ -3,15 +3,13 @@
 #Boss-1-1 v2
 #Boss battle, using all of the pygame components I've learned up till this point.
 
-#NOTE TO SELF: After the next commit, replace boss with Vivian James
-
 #TO-DO LIST:
 'Fix broken bullet movement (Boss spell-card)' 							#COMPLETE
 'Turn game into a "game-overlay"' 										#COMPLETE
 'Fix right border of game-overlay'										#COMPLETE
 'Make player invincible after being hit (for a short time)' 			#COMPLETE
 'Add information on the side (player health, player bombs, etc.)'		#COMPLETE
-'Symbols for player lives and player bombs'								#COMPLETE
+'Symbols for players[current_playr] lives and player bombs'								#COMPLETE
 'Add music/sound effects'												#COMPLETE
 'Add power up items and point items'									#COMPLETE
 'Add logging'															#COMPLETE
@@ -19,7 +17,7 @@
 'Add launcher'															#COMPLETE
 'Fix music delay'														#COMPLETE? (Still a small delay, but not as noticable as before)
 'Fix order that sprites get rendered in'								#COMPLETE
-'Fix game crashing when final spell timer runs out'						#COMPLETE (fixed with permaKill())
+'Fix game crashing when final spell timer runs out'						#COMPLETE
 'Fix the order in which sprites get rendered first'						#COMPLETE
 'Add custom boss idle methods'											#COMPLETE
 
@@ -40,9 +38,10 @@
 'Create proper images/backgrounds'										#INCOMPLETE
 'Bullet Patterns'														#INCOMPLETE
 'Fix Player bomb'														#INCOMPLETE (Bomb completely broken, will probably need to rework entirely)
-'Clean-up/re-write boss and player code'								#INCOMPLETE (boss timer crashes game on last life, player bomb broken. Code for both is a mess and should just be re-written)
+'Clean-up/re-write boss and player code'								#INCOMPLETE (boss timer crashes game on last life, players[current_playr] bomb broken. Code for both is a mess and should just be re-written)
 'Fix duplicate point and graze bug'										#INCOMPLETE (pointColl gets + 2, graze sometimes adds 2 instead of 1)
 'Fix player hitbox appearing at the beginning of the game'				#INCOMPLETE
+'Fix powerup items not being collected by the player.'					#INCOMPLETE
 
 'Add system flags'														#Irrelavent
 
@@ -63,25 +62,6 @@ from bin.lib.constants import * #Keep constants in a separate folder to make the
 from bin.lib.globalVar import * #Keep all global variables in a separate file so that any part of the program can access them
 from bin.lib.dependencies import *
 
-class laser(Bullet):
-	def __init__(self,x,y,num,life,img,speed,playerb=False):
-		bullet.__init__(self,x,y,num,img,speed,playerb=playerb)
-		self.life = life
-		self.birth = pygame.time.get_ticks()
-
-	def kill(self,ctime):
-		if not self.life == -1:
-			if (float(ctime)/1000) - (float(self.birth)/1000) >= self.life:
-				if self.playerb:
-					all_bullets.remove(self)
-					player.bulletGroup.remove(self)
-
-				else:
-					all_bullets.remove(self)
-					player.bulletGroup.remove(self)
-
-				del self
-
 def updateScreen(BKG,bkg_override=None):
 	screen.blit(BKG,(0,0))
 
@@ -93,7 +73,7 @@ def updateScreen(BKG,bkg_override=None):
 	pygame.display.update()
 
 def renderSprites():
-	player.drawSprite(overlay)
+	players[current_playr].drawSprite(overlay)
 	all_sprites.draw(overlay)
 	itemGroup.draw(overlay)
 
@@ -108,12 +88,6 @@ def renderSprites():
 		i.idle()
 
 	all_bullets.draw(overlay)
-
-def runIdle(sprites={}):
-	'''{sprite:[args]}'''
-	for sprite in sprites:
-		args = sprites[sprite]
-		sprite.idle(*args)
 
 def infoPrint(str_info,data_info):
 	new_info = []
@@ -145,12 +119,12 @@ def infoPrint(str_info,data_info):
 
 		n = (n[0],n[1]+new_info[1].get_height() + 10)
 
-	x = "POWER: " + str(player.getPower())
+	x = "POWER: " + str(players[current_playr].getPower())
 	i = fontObj.render(x,True,WHITE)
 	screen.blit(i,n)
 
-	symbol(player.life,LIFE_IMG,ppos,screen)
-	symbol(player.bombs,BOMB_IMG,bpos,screen)
+	symbol(players[current_playr].life,LIFE_IMG,ppos,screen)
+	symbol(players[current_playr].bombs,BOMB_IMG,bpos,screen)
 
 def cutin(bosss,players,stage):
 	'''bosss and players are cutin images.'''
@@ -188,44 +162,37 @@ bkg_override = None
 pygame.mixer.pre_init(frequency=22050, size=-16, buffer=512)
 pygame.init()
 
-pygame.display.set_caption('Dot Boss Battle')
+pygame.display.set_caption(getSetting('prg_name'))
 overlay.fill(WHITE)
 
 screen.blit(overlay,OVERPOS)
 
-bossGroup.add(boss)
-playerGroup.add(player)
-all_sprites.add(player,boss)
+bosses = 	bossGroup.sprites()
+players = 	playerGroup.sprites()
 
 if getSetting('full_power'):
-	player.setPower("max")
+	players[current_playr].setPower("max")
 
 if getSetting('full_life'):
-	player.setLife(player.maxLife)
+	players[current_playr].setLife(players[current_playr].maxLife)
 
 if getSetting('enable_music'):
-	playMusic("th00_02.ogg")
+	mus = bosses[current_boss].getMusic()
+	playMusic(mus,getSetting("musicVolume"))
 else:
 	logging("Not playing music.","std")
 
-#This isn't going to be used for anything yet, but will be used as a way to quickly skip to stages
-if "-stage=" in sys.argv:
-	stage = sys.argv[sys.argv.index("-stage=") + 1]
-	logging("Loading stage " + stage + "...","std")
-
-# boss.spellTimer.startTimer()
-
-boss.StartBossFight()
+bosses[current_boss].StartBossFight()
 
 while True:
-	all_bullets.add(x for x in player.bulletGroup.sprites())
-	all_bullets.add(x for x in boss.bulletGroup.sprites())
+	all_bullets.add(x for x in players[current_playr].bulletGroup.sprites())
+	all_bullets.add(x for x in bosses[current_boss].bulletGroup.sprites())
 	all_bullets.add(x for x in bombBullet.sprites())
 
 	itemGroup.add(x for x in scoreGroup.sprites())
 	itemGroup.add(x for x in powerGroup.sprites())
 
-	boss.getSpellBKG() #This may need to be moved later, as this is a terrible spot for this line
+	bosses[current_boss].getSpellBKG() #This may need to be moved later, as this is a terrible spot for this line
 
 	for event in pygame.event.get():
 		if event.type == QUIT: shutdown()
@@ -240,23 +207,29 @@ while True:
 			
 			if event.key == K_z:
 
-				player.shooting = True
+				players[current_playr].shooting = True
 
 			if event.key == K_x and False: #This is to prevent the bomb from working
-				if player.bombs != 0 and not player.bombing:
-					# bomb_name = player.bomb()
-					player.playerbomb = True
+				if players[current_playr].bombs != 0 and not players[current_playr].bombing:
+					# bomb_name = players[current_playr].bomb()
+					players[current_playr].playerbomb = True
 
 			if event.key == K_LSHIFT or event.key == K_RSHIFT:
 				# focus = True
-				player.setFocus(True)
+				players[current_playr].setFocus(True)
 
 			if event.key == K_RETURN:
 				#overlay technical information in the command prompt.
-				print "PLAYER", player.life, ": ", player.bombing, ": ", player.god
-				print "BOSS", boss.life, ": ", boss.lives
+				# print "PLAYER", players[current_playr].life, ": ", players[current_playr].bombing, ": ", players[current_playr].god
+				# print "BOSS", bosses[current_boss].life, ": ", bosses[current_boss].lives
 
-				log_string = "PLAYER LIFE=" + str(player.life) + ": BOMBING=" + str(player.bombing) + ": GOD=" + str(player.god) + "\nBOSS LIFE=" + str(boss.life) + ": LIVES=" + str(boss.lives)
+				print type(str(pygame.mixer.music.get_volume()))
+				log_string = (
+					"PLAYER LIFE=" + str(players[current_playr].life) + ": BOMBING=" + str(players[current_playr].bombing) + ": GOD=" + 
+					str(players[current_playr].god) + "\nBOSS LIFE=" + str(bosses[current_boss].life) + ": LIVES=" + str(bosses[current_boss].lives) + 
+					"\nMUSIC VOLUME: " + str(pygame.mixer.music.get_volume()))
+
+				print log_string
 
 				logging("Overlay information:","test",log_string)
 			
@@ -273,12 +246,12 @@ while True:
 
 			if event.key == K_g and ctrl_hold:
 				#Toggle god mode
-				# if player.god: 	player.god = False
-				# else: 			player.god = True
+				# if players[current_playr].god: 	players[current_playr].god = False
+				# else: 			players[current_playr].god = True
 
-				player.makeGod()
+				players[current_playr].makeGod()
 
-				print "GOD",player.god
+				print "GOD",players[current_playr].god
 
 			if event.key == K_h and ctrl_hold:
 				#Show bullet and enemy hitboxes
@@ -289,6 +262,14 @@ while True:
 				#Force error messages to occur. This is only to test debugging stuff and should be removed in released verisons.
 				raise Exception("Error forced by user.")
 
+			if event.key == (K_COMMA or K_LESS) and ctrl_hold:
+				vol = pygame.mixer.music.get_volume() - 0.1
+				pygame.mixer.music.set_volume(vol)
+
+			if event.key == (K_PERIOD or K_GREATER) and ctrl_hold:
+				vol = pygame.mixer.music.get_volume() + 0.1
+				pygame.mixer.music.set_volume(vol)
+
 			collide = False
 			
 		if event.type == KEYUP:
@@ -297,55 +278,55 @@ while True:
 			if event.key == K_LEFT:   	l_move = False
 			if event.key == K_RIGHT:  	r_move = False
 
-			if event.key == K_z:		player.shooting = False
+			if event.key == K_z:		players[current_playr].shooting = False
 
 			if event.key == K_LSHIFT or event.key == K_RSHIFT:
 				# focus = False
-				player.setFocus(False)
+				players[current_playr].setFocus(False)
 
 			if event.key == K_LCTRL or event.key == K_RCTRL:
 				ctrl_hold = False
 
-	move([d_move,u_move,l_move,r_move],direction2,player)
+	move([d_move,u_move,l_move,r_move],direction2,players[current_playr])
 
 	######Sprite collision detection######
-	if pygame.sprite.spritecollide(player,bossGroup,False) and not collide:
+	if pygame.sprite.spritecollide(players[current_playr],bossGroup,False) and not collide:
 		collide = True
 		
-		if not player.isGod() and not player.bombing:
-			player.addLife(-1)
+		if not players[current_playr].isGod() and not players[current_playr].bombing:
+			players[current_playr].addLife(-1)
 
-	if not player.getIsDead():
-		if pygame.sprite.spritecollide(player,boss.bulletGroup,True) and not collide:
+	if not players[current_playr].getIsDead():
+		if pygame.sprite.spritecollide(players[current_playr],bosses[current_boss].bulletGroup,True) and not collide:
 			collide = True
 			
-			if not player.isGod() and not player.bombing:
-				player.addLife(-1)
+			if not players[current_playr].isGod() and not players[current_playr].bombing:
+				players[current_playr].addLife(-1)
 
-	if pygame.sprite.spritecollide(boss,player.bulletGroup,True):
-		boss.addLife(-player.damage)
-		player.score += 10
-	if pygame.sprite.spritecollide(boss,bombBullet,False):
-		boss.addLife(-5)
+	if pygame.sprite.spritecollide(bosses[current_boss],players[current_playr].bulletGroup,True):
+		bosses[current_boss].addLife(-players[current_playr].damage)
+		players[current_playr].score += 10
+	if pygame.sprite.spritecollide(bosses[current_boss],bombBullet,False):
+		bosses[current_boss].addLife(-5)
 		# score += 10
-		player.score += 10
+		players[current_playr].score += 10
 
-	for b in boss.bulletGroup.sprites():
+	for b in bosses[current_boss].bulletGroup.sprites():
 		if pygame.sprite.spritecollide(b,bombBullet,False):
 			# b.setLife(-1)
 			pos = [b.rect.x,b.rect.y]
 			b = StarPointItem(pos)
 
-			player.score += 10
+			players[current_playr].score += 10
 
-	if float(pygame.time.get_ticks())/1000 - player.death_time >= 3:
-		# player.makeGod()
-		player.god = False
+	if float(pygame.time.get_ticks())/1000 - players[current_playr].death_time >= 3:
+		# players[current_playr].makeGod()
+		players[current_playr].god = False
 
-	if player.bombing and False: #Don't want this to run, but don't want to delete until we know it's obosolete
+	if players[current_playr].bombing and False: #Don't want this to run, but don't want to delete until we know it's obosolete
 		# if not boss.life <= 0 and not boss.lives <= 1:
 		# 	score += 10
-		player.god = 	True
+		players[current_playr].god = 	True
 		focus = True
 		bomb_fin = False
 		messages[bomb_name] = (0, overlay.get_height()-(bomb_name.get_height()+5))
@@ -362,30 +343,30 @@ while True:
 			# l = laser(x,y,start,4,'img_laser1.png',[0,0],playerb=True)
 			# bombBullet.add(l)
 
-			player.bombing = 	False
-			player.god = 		False
+			players[current_playr].bombing = 	False
+			players[current_playr].god = 		False
 			focus = 			False
 			bomb_fin = 			False
 
 			clear_b(boss.bulletGroup)
-			clear_b(player.bulletGroup)
+			clear_b(players[current_playr].bulletGroup)
 
 		# for i in bombBullet: i.update()
 
-	if False and player.life < 0 or player.lose:
-		all_sprites.remove(x for x in player.bulletGroup.sprites())
+	if False and players[current_playr].life < 0 or players[current_playr].lose:
+		all_sprites.remove(x for x in players[current_playr].bulletGroup.sprites())
 		all_sprites.remove(x for x in boss.bulletGroup.sprites())
 		
-		player.bulletGroup.empty()
+		players[current_playr].bulletGroup.empty()
 		boss.bulletGroup.empty()
 		
-		for i in player.groups():
-			i.remove(player)
+		for i in players[current_playr].groups():
+			i.remove(players[current_playr])
 
-		# all_sprites.remove(player)
-		# playerGroup.remove(player)
+		# all_sprites.remove(players[current_playr])
+		# playerGroup.remove(players[current_playr])
 
-		player.life = 0
+		players[current_playr].life = 0
 
 		x = fontObj.render('YOU LOSE!',True,BLACK)
 		overlay.blit(x,surf_center(overlay,x))
@@ -398,13 +379,13 @@ while True:
 	if True:
 		#Run all Player methods
 		#NOTE: These need to be moved into the player class at some point
-		player.update(direction2)
-		player.graze(boss.bulletGroup)
+		players[current_playr].update(direction2)
+		players[current_playr].graze(bosses[current_boss].bulletGroup)
 
-		if player.playerbomb:
-			player.bomb(fontObj,overlay,bombBullet,boss.bulletGroup)
+		if players[current_playr].playerbomb:
+			players[current_playr].bomb(fontObj,overlay,bombBullet,bosses[current_boss].bulletGroup)
 		else:
-			player.playerbomb = False
+			players[current_playr].playerbomb = False
 
 	# bkg_override = boss.getSpellBKG()
 
@@ -413,18 +394,17 @@ while True:
 	for b in all_bullets.sprites(): b.update()
 
 	for i in itemGroup.sprites():
-		i.idle(player)
+		i.idle(players[current_playr])
 		i.update()
 
 	info = [HI,
-			# score,
-			player.score,
+			players[current_playr].score,
 			"",
 			"",
-			player.grazep,
-			"/".join([str(player.pointColl),str(player.maxPointColl)])]
+			players[current_playr].grazep,
+			"/".join([str(players[current_playr].pointColl),str(players[current_playr].maxPointColl)])]
 	
-	runIdle(sprites={player:[],boss:[]})
+	runIdle(sprites={players[current_playr]:[],bosses[current_boss]:[]})
 	updateScreen(S_BKG,bkg_override=bkg_override)
 
 	fps.tick(FPS)

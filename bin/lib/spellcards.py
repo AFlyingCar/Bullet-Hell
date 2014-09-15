@@ -12,8 +12,6 @@ from fontlib import *
 from globalVar import *
 from constants import *
 
-# import fontlib,
-
 class SpellCard(object):
 	def __init__(self,time,name,owner,ownerGroup,playerb=False,newMaxLife=1000):
 		'''A generic spellcard class that will spawn bullets in a pre-defined pattern

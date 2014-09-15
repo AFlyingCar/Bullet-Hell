@@ -10,7 +10,7 @@ from debugger import *
 from settings import *
 from color import *
 
-s_init_check = False # <- Whether to check for an initialized mixer
+s_init_check = getSetting('checkMixerInit') # <- Whether to check for an initialized mixer
 
 ######Load images from ./Images and return a blank Surface if the image couldn't be found
 def loadImage(filename,path=getSetting('path_image'),fail_size=[10,10]):
@@ -160,13 +160,21 @@ def playMusic(filename,volume=1.0):
 
 	if s:
 		pygame.mixer.music.play(-1)
+		logging("Successfully playing " + filename, "std")
 	else:
-		# print "ERROR"
-		pass
+		logging("An error has occurred when loading music: " + filename + ".", "err")
+
+def isPlaying(sound=None):
+	'''Return whether or not sound is currently playing.'''
+	if sound:
+		return pygame.mixer.get_busy()
+	else:
+		return pygame.mixer.music.get_busy()
 
 def stopMusic():
 	'''Will stop all music from playing.'''
-	pygame.mixer.music.stop()
+	if isPlaying():
+		pygame.mixer.music.stop()
 
 def offscreen(maxSize,groups=[]):
 	#For bullets only
@@ -412,6 +420,5 @@ def runIdle(sprites={}):
 	for sprite in sprites:
 		args = sprites[sprite]
 		sprite.idle(*args)
-
 
 nuclear = u'\u2622'

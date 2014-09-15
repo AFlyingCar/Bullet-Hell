@@ -358,7 +358,10 @@ class boss(Spritey):
 
 		self.music = music
 
+		self.timesRun = 0 #<- This is necessary for uponDeath, but I would like to get rid of it soon
+
 	def dispLife(self,surface):
+		'''Display all of the boss's health bars.'''
 		start = 	(5*self.lives,5)
 
 		percent = 	float(self.life)/float(self.maxLife)
@@ -371,6 +374,7 @@ class boss(Spritey):
 		pygame.draw.line(surface,BLUE,start,end,3) #Boss health bar
 
 	def dropItem(self):
+		'''Drop collectable items'''
 		dropList = []
 
 		drops = self.spells[self.spell].getDrops()
@@ -404,6 +408,7 @@ class boss(Spritey):
 		self.fighting = False
 
 	def kill(self):
+		'''What to do when the boss's health reaches 0.'''
 		if self.life < 0:
 			self.dropItem()
 
@@ -427,6 +432,7 @@ class boss(Spritey):
 			logging(str(self) + " has died!", "std","Remaining lives: " + str(self.lives))
 
 	def attack(self,args=[]):
+		'''Run current spellcard idle method.'''
 		card = self.spell
 
 		if args:
@@ -435,6 +441,7 @@ class boss(Spritey):
 			self.spells[card].idle()
 
 	def idle(self,args=[]):
+		'''Custom idle method.'''
 		if self.fighting:
 			self.attack(args)
 
@@ -464,7 +471,9 @@ class boss(Spritey):
 		overlay.blit(bkg,(0,0))
 
 	def uponDeath(self):
+		'''What the boss is supposed to do upon death.'''
 		if self.isDead:
+			self.timesRun += 1
 			for b in self.bulletGroup.sprites():
 				b.kill()
 
@@ -476,11 +485,17 @@ class boss(Spritey):
 
 			overlay.blit(x,pos)
 
-			stopMusic()
-			# self.spells[self.spell].stopCard()
+			if self.timesRun <= 1:
+				stopMusic()
+
+			if not isPlaying():
+				mus = getSetting('enable_music')
+				if mus: playMusic("th00_03.ogg")
+
 			self.endBossFight()
 
 	def permaKill(self):
+		'''Permanantly kill the boss.'''
 		for i in self.groups():
 			i.remove(self)
 
@@ -489,12 +504,14 @@ class boss(Spritey):
 		# del self
 
 	def update(self):
+		'''Update the boss's position based on its speed.'''
 		self.speed = spriteWallCollide(self)
 
 		self.rect.x += self.speed[0]
 		self.rect.y += self.speed[1]
 
 	def getNewLife(self):
+		'''Get the boss's next life.'''
 		if False:
 			self.clife >= len(self.lifes)
 			self.permaKill()

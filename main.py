@@ -171,16 +171,18 @@ bosses = 	bossGroup.sprites()
 players = 	playerGroup.sprites()
 
 if getSetting('full_power'):
+	# Give player max power
 	players[current_playr].setPower("max")
 
 if getSetting('full_life'):
+	# Give player max life (10 hearts)
 	players[current_playr].setLife(players[current_playr].maxLife)
 
 if getSetting('enable_music'):
 	mus = bosses[current_boss].getMusic()
 	playMusic(mus,getSetting("musicVolume"))
-else:
-	logging("Not playing music.","std")
+
+logging("Music has been " + ('enabled at ' + str(getSetting('musicVolume')) + ' volume.' if getSetting('enable_music') else 'disabled.'),"std")
 
 bosses[current_boss].StartBossFight()
 

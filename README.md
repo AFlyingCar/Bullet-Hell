@@ -18,7 +18,7 @@ Compiling/Setup
 
 The game uses a Cx_Freeze script to compile the game into a runnable executable. To run the setup script, make sure that it is in the same directory as launcher.py, open up either command prompt if on Windows, or terminal if on Unix, and type the following:
 
-`<setup.py build>`
+`setup.py build`
 
 Once it is finished, it will create a folder named build_[month]-[day]-[year] with a number at the end if more than one build file has been created in one day. Inside will be both the source code and the compiled launcher.exe.
 

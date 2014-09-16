@@ -407,9 +407,9 @@ class boss(Spritey):
 		'''End boss fight.'''
 		self.fighting = False
 
-	def kill(self):
+	def kill(self,timerkill=False):
 		'''What to do when the boss's health reaches 0.'''
-		if self.life < 0:
+		if self.life < 0 or timerkill:
 			self.dropItem()
 
 			if self.spell + 1 > (len(self.spells)-1):
@@ -444,9 +444,6 @@ class boss(Spritey):
 		'''Custom idle method.'''
 		if self.fighting:
 			self.attack(args)
-
-			# if self.life < 0:
-			# 	self.kill()
 
 			self.kill()
 

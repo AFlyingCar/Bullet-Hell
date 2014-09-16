@@ -44,16 +44,22 @@ class SpellCard(object):
 
 		self.drops = {"p":0}
 
+		self.running = False
+
 	def runCard(self):
 		'''This will begin the spellcard when called for the first time. It must be continuously called by idle.'''
 		if not self.start:
 			self.start = True
+			self.running = True
 			self.timer.startTimer()
-		# else:
-		self.Card()
+
+		if self.running:
+			self.Card()
+
 		self.timer.stopTimer()
+
 		if self.timer.isFinished():
-			self.owner.kill()
+			self.owner.kill(True)
 			self.stopCard()
 
 	def Card(self):
@@ -102,16 +108,16 @@ class SpellCard(object):
 
 	def idle(self):
 		'''Default idle method. Can be overwritten for custom content.'''
-		if self.start:
-			self.runCard() #Run spellcard
+		self.runCard() #Run spellcard
 
-			self.renderInfo(self.timepos,overlay,fontObj) #Render name and time
+		self.renderInfo(self.timepos,overlay,fontObj) #Render name and time
 
-		return self.spellBKG #
+		return self.spellBKG #Return the custom background of the spellcard
 
 	def stopCard(self):
 		'''End the spellcard if it hasn't already'''
 		if self.start:
+			self.running = False
 			self.start = False
 			self.timer.forceStop()
 			self.timer.reset()
@@ -155,6 +161,10 @@ class SpellCard(object):
 		'''Get spellcard background.'''
 		return self.spellBKG
 
+	def getCardTime(self):
+		'''Return the amount of time left on the spellcard's timer as a float.'''
+		self.timer.getTimeLeft()
+
 class LargeEX(SpellCard):
 	def __init__(self,owner,ownerGroup,playerb=False):
 		SpellCard.__init__(self,30000,"Large X: Generic Danmaku",owner,ownerGroup,playerb=playerb,newMaxLife=1500)
@@ -193,13 +203,5 @@ class LargeEX(SpellCard):
 
 				self.ownerGroup.add(b)
 				self.ownerGroup.add(b2)
-
-	def idle(self):
-		self.runCard()
-		# self.dispTime((OVERLAX/2-20,5),overlay,fontObj,cutoff=1)
-		
-		self.renderInfo(self.timepos,overlay,fontObj)
-
-		return self.spellBKG
 
 nuclear = u'\u2622'

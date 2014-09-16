@@ -1,0 +1,32 @@
+========
+Controls
+========
+
+UP -> 		UP_ARROW
+DOWN -> 	DOWN_ARROW
+LEFT -> 	LEFT_ARROW
+RIGHT ->	RIGHT_ARROW
+
+SHOOT -> 	z (Hold down for continuous fire)
+BOMB -> 	x
+FOCUS -> 	Shift
+
+EXIT -> 	Esc
+
+Display Technical Information
+=============================
+ENTER
+
+KEYCOMMANDS
+===========
+To activate key commands, hold down the Control key, and then press a valid key to activate the command.
+
+Valid key commands:
+===================
+Force error -> e
+Force quit  -> w
+God mode 	-> g
+Show bullet -> h
+	hitboxes
+Volume less -> , or <
+Volume more -> . or >

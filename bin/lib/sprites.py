@@ -69,6 +69,8 @@ class Player(Spritey):
 
 		self.lose = False
 
+		self.timesRun = 0
+
 	def update(self,direction):
 		'''Update the player's position based on their speed'''
 		self.rect.x += direction[0]
@@ -309,6 +311,7 @@ class Player(Spritey):
 	def uponDeath(self):
 		'''What to do when the player dies.'''
 		if self.isDead:
+			self.timesRun += 1
 			x = fontObj.render('YOU LOSE!',True,BLACK)
 			overlay.blit(x,surf_center(overlay,x))
 
@@ -316,6 +319,13 @@ class Player(Spritey):
 			# self.sprite = pygame.Surface((1,1))
 			if self.visible:
 				self.toggleVisible()
+
+			if self.timesRun <= 1:
+				stopMusic()
+
+			if not isPlaying():
+				mus = getSetting('enable_music')
+				if mus: playMusic("th00_04.ogg")
 
 	def toggleVisible(self):
 		'''Toggle sprite visibility.'''

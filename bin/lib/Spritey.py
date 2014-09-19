@@ -8,8 +8,11 @@ from constants import *
 from basic import *
 
 class Spritey(pygame.sprite.Sprite):
-	'''Sprite class that defines some basic methods'''
 	def __init__(self,num,life=3):
+		'''Base sprite class.
+		num 	<- integer. Starting position.
+		life=3 	<- integer. Starting life of the sprite.
+		'''
 		pygame.sprite.Sprite.__init__(self)
 
 		self.pos = num
@@ -39,34 +42,45 @@ class Spritey(pygame.sprite.Sprite):
 		self.bulletGroup = pygame.sprite.Group()
 
 	def shoot(self,group):
-		######Generic sprite shooting######
+		'''Generic sprite shooting.
+		Customize this for all sprites that extend from this class.'''
 		b = circleShot((self.rect.x,self.rect.y-30),(0,-30))
 		group.add(b)
 
 	def setLife(self,life):
+		'''Set the sprite's life to a new integer.
+		life <- integer.'''
 		logging("Changing " + str(self) + "'s health from " + str(self.life) + " to " + str(life),"std")
 		self.life = life
 
 	def setMaxLife(self,life):
+		'''Change the sprite's maximum life to a new integer.
+		life <- integer.'''
 		logging("Max life changed from " + str(self.maxLife) + " to " + str(life),"std")
 		self.maxLife = life
 
 	def addLife(self,life):
+		'''Add an integer to current life.
+		life <- integer'''
 		self.life += life
 		if life > 0:
 			logging(str(self) + " has gained a life!", "std", "Health is now " + str(self.life))
 
 	def setPos(self,pos):
+		'''Set the sprite's position.
+		pos <- (x,y)'''
 		self.pos = pos
 		self.rect.x = self.pos[0]
 		self.rect.y = self.pos[1]
 
 	def getPos(self):
+		'''Returns the current x,y position of the sprite.'''
 		x = self.rect.x
 		y = self.rect.y
 		return [x,y]
 
 	def drawSprite(self,surface):
+		'''Draw the sprite to the specified surface.'''
 		pos = surf_center(self.sprite,self.image)
 		pos[0] = self.rect.x - pos[0]
 		pos[1] = self.rect.y - pos[1]
@@ -78,23 +92,27 @@ class Spritey(pygame.sprite.Sprite):
 		surface.blit(self.sprite,self.spritePos)
 
 	def update(self,speed):
-		######Generic sprite position updater######
+		'''Update sprite position based on its speed.
+		speed <- (x,y)'''
 		self.rect.x += speed[0]
 		self.rect.y += speed[1]
 
 	def returnToStart(self):
+		'''Return to location the sprite was instantiated at.'''
 		self.setPos(self.start_pos)
 
 	def getIsDead(self):
+		'''Return true if the sprite has lost all of its life, and false if the sprite's life is greater than 0.'''
 		return self.isDead
 
 	def idle(self):
-		'''Stuff to run while the program is running. (E.X: Checking health)'''
+		'''Run commands constantly.'''
 
 		if self.life <= 0:
 			self.kill()
 
 	def kill(self):
+		'''Run commands after the sprite has died.'''
 		if self.life <= self.maxLife:
 			# logging("Killing " + str(self) + "!", "std")
 			for g in self.groups():
@@ -109,6 +127,8 @@ class Spritey(pygame.sprite.Sprite):
 		logging("Oh noes! I have died!","std")
 
 	def followRect(self,rect):
+		'''Change position based on the Rect rect's position
+		rect <- pygame.Rect'''
 		if self.rect.x < rect.x:
 			self.rect.x += self.speed
 		elif self.rect.x > rect.x:
@@ -124,10 +144,12 @@ class Spritey(pygame.sprite.Sprite):
 		else: self.rect.y += 0
 
 	def addBullet(self,bullets=[]):
+		'''Add bullets to the sprite's bullet group.'''
 		for b in bullets:
 			self.bulletGroup.add(b)
 
 	def showHitBox(self,show=False):
+		'''Color in the normally invisible hitbox.'''
 		self.showHB = show
 
 		if show:

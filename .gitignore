@@ -15,3 +15,5 @@ build_*
 boss-*.py
 *.png
 !bin/Images/*.png
+__init__.py
+unused/

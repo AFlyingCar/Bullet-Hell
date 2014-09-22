@@ -13,7 +13,7 @@ def zipdir(path,zip):
 			zip.write(os.path.join(root,file))
 			print os.path.join(root,file)
 
-includes = ['bin\\','thcut.dat','license.txt','README.txt','config.cfg']
+includes = ['bin\\','thcut.dat','license.txt','README.md','config.cfg']
 packages = ["os","pygame","pygame.locals","random","sys","urllib2","traceback","ctypes"]
 excludes = ["tkinter"]
 
@@ -44,6 +44,8 @@ for i in includes:
 
 zipf.close()
 
+pack_name = fileName
+
 if not os.path.exists(fileName):
 	os.rename("build\\",fileName)
 else:
@@ -52,6 +54,7 @@ else:
 		if f.startswith(fileName):
 			num += 1
 
-	os.rename("build\\",fileName + " (" + str(num) + ")")
+	pack_name = fileName + " (" + str(num) + ")"
+	os.rename("build\\",pack_name)
 
 nuclear = u'\u2622'

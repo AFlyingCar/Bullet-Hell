@@ -361,40 +361,40 @@ def sprite_sheet(size,filename,pos=(0,0),path=getSetting('path_anim')):
 
 def infoPrint(str_info,data_info):
 	new_info = []
-	n = (OVERPOS[0] + 10 + OVERLAX, 50) #Y position of information
+	pos = (OVERPOS[0] + 10 + OVERLAX, 50) #Y position of information
 
 	for i in str_info:
 		loc = str_info.index(i)
 
 		x = i + str(data_info[loc])
-		m = fontObj.render(x,True,WHITE)
+		font_data = fontObj.render(x,True,WHITE)
 
 		if i == "Player":
-			ppos = list(n)
-			ppos[0] += m.get_width() + 10
+			ppos = list(pos)
+			ppos[0] += font_data.get_width() + 10
 			ploc = loc
 		elif i == "Bomb":
-			bpos = list(n)
-			bpos[0] += m.get_width() + 10
+			bpos = list(pos)
+			bpos[0] += font_data.get_width() + 10
 			bloc = loc
 
-		new_info.append(m)
+		new_info.append(font_data)
 
 	for i in new_info:
-		screen.blit(i,n)
+		screen.blit(i,pos)
 		if new_info.index(i) == ploc:
-			ppos[1] = n[1]
+			ppos[1] = pos[1]
 		elif new_info.index(i) == bloc:
-			bpos[1] = n[1]
+			bpos[1] = pos[1]
 
-		n = (n[0],n[1]+new_info[1].get_height() + 10)
+		pos = (pos[0],pos[1]+new_info[1].get_height() + 10)
 
-	x = "POWER: " + str(player.getPower())
+	x = "POWER: " + str(players[current_playr].getPower())
 	i = fontObj.render(x,True,WHITE)
-	screen.blit(i,n)
+	screen.blit(i,pos)
 
-	symbol(player.life,LIFE_IMG,ppos,screen)
-	symbol(player.bombs,BOMB_IMG,bpos,screen)
+	symbol(players[current_playr].life,LIFE_IMG,ppos,screen)
+	symbol(players[current_playr].bombs,BOMB_IMG,bpos,screen)
 
 def spriteWallCollide(sprite):
 	'''Reverse sprite speed if it collides with the wall.'''

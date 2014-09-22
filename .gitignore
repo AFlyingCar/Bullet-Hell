@@ -12,3 +12,6 @@ Fonts/*
 *.OLD*
 bin/lib/*.png
 build_*
+boss-*.py
+*.png
+!bin/Images/*.png

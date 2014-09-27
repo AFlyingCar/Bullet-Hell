@@ -9,7 +9,7 @@
 'Fix right border of game-overlay'										#COMPLETE
 'Make player invincible after being hit (for a short time)' 			#COMPLETE
 'Add information on the side (player health, player bombs, etc.)'		#COMPLETE
-'Symbols for players[current_playr] lives and player bombs'								#COMPLETE
+'Symbols for players[current_playr] lives and player bombs'				#COMPLETE
 'Add music/sound effects'												#COMPLETE
 'Add power up items and point items'									#COMPLETE
 'Add logging'															#COMPLETE
@@ -162,7 +162,9 @@ bkg_override = None
 pygame.mixer.pre_init(frequency=22050, size=-16, buffer=512)
 pygame.init()
 
-pygame.display.set_caption(getSetting('prg_name'))
+prgname = getSetting('prg_name') + " " + getSetting('game_version')
+
+pygame.display.set_caption(prgname)
 overlay.fill(WHITE)
 
 screen.blit(overlay,OVERPOS)
@@ -225,11 +227,13 @@ while True:
 				# print "PLAYER", players[current_playr].life, ": ", players[current_playr].bombing, ": ", players[current_playr].god
 				# print "BOSS", bosses[current_boss].life, ": ", bosses[current_boss].lives
 
-				print type(str(pygame.mixer.music.get_volume()))
+				# print type(str(pygame.mixer.music.get_volume()))
 				log_string = (
 					"PLAYER LIFE=" + str(players[current_playr].life) + ": BOMBING=" + str(players[current_playr].bombing) + ": GOD=" + 
-					str(players[current_playr].god) + "\nBOSS LIFE=" + str(bosses[current_boss].life) + ": LIVES=" + str(bosses[current_boss].lives) + 
-					"\nMUSIC VOLUME: " + str(pygame.mixer.music.get_volume()))
+					str(players[current_playr].god) + ": POSITION=" + str(players[current_playr].getPos()) + 
+					"\nBOSS LIFE=" + str(bosses[current_boss].life) + ": LIVES=" + str(bosses[current_boss].lives) + 
+					": POSITION=" + str(bosses[current_boss].getPos()) + "\nMUSIC VOLUME: " + str(pygame.mixer.music.get_volume()) + ":" + 
+					("ON" if getSetting("enable_music") else "OFF"))
 
 				print log_string
 
@@ -271,6 +275,9 @@ while True:
 			if event.key == (K_PERIOD or K_GREATER) and ctrl_hold:
 				vol = pygame.mixer.music.get_volume() + 0.1
 				pygame.mixer.music.set_volume(vol)
+
+			if event.key == K_s and ctrl_hold:
+				takeScreenShot(screen)
 
 			collide = False
 			

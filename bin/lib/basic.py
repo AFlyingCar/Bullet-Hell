@@ -3,7 +3,7 @@
 #Basic
 #Contains basic loading functions
 
-import pygame,os,sys
+import pygame,os,sys,math
 from pygame.locals import *
 from globalVar import *
 from debugger import *
@@ -11,6 +11,19 @@ from settings import *
 from color import *
 
 s_init_check = getSetting('checkMixerInit') # <- Whether to check for an initialized mixer
+
+def takeScreenShot(surface,path=getSetting('path_screenshot')):
+	# filename = genLogName(newName=)
+	i = 1
+	for i in os.listdir(path):
+		if i.startswith("ScreenShot") and i.endswith(".bmp"): i += 1
+
+	filename = "ScreenShot-(" + str(i) + ").bmp"
+	filename = os.path.join(path,filename)
+
+	pygame.image.save(surface,filename)
+
+	logging("Screenshot saved in " + filename,"std")
 
 ######Load images from ./Images and return a blank Surface if the image couldn't be found
 def loadImage(filename,path=getSetting('path_image'),fail_size=[10,10]):
@@ -420,5 +433,26 @@ def runIdle(sprites={}):
 	for sprite in sprites:
 		args = sprites[sprite]
 		sprite.idle(*args)
+
+def pointOnCircle(center,deg,radius=1):
+	x = center[0]
+	y = center[1]
+
+	cos = math.cos(math.radians(deg))
+	sin = math.sin(math.radians(deg))
+
+	x2 = (radius*cos)+x
+	y2 = (radius*sin)+y
+
+	return [x2,y2]
+
+def newSpeed(start, end):
+	dx = float(start[0]) - float(end[0])
+	dy = float(start[1]) - float(end[1])
+
+	dx = round(dx)
+	dy = round(dy)
+
+	return [dx, dy]
 
 nuclear = u'\u2622'

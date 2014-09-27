@@ -83,7 +83,7 @@ if __name__ == "__main__":
 			import main
 		except BaseException as e:
 			if type(e) != SystemExit:
-				prgname = getSetting('prg_name')
+				prgname = getSetting('prg_name') + " " + getSetting('game_version')
 
 				error = traceback.format_exc()
 				logging("Sorry.\n" + '-'*30 + "\nA fatal runtime error has occurred in " + prgname + ", and it must be shut down.","err",error)

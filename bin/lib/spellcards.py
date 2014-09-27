@@ -9,6 +9,7 @@ from basic import *
 from bullets import *
 from timerv2 import *
 from fontlib import *
+from patterns import *
 from globalVar import *
 from constants import *
 
@@ -36,7 +37,8 @@ class SpellCard(object):
 		self.spellBKG = pygame.Surface(overlay.get_size())
 		self.spellBKG.fill(WHITE)
 
-		self.last_time = 0
+		self.ctime = 		float(pygame.time.get_ticks())/1000
+		self.last_time = 	self.ctime
 
 		self.owner.speed = [3,0]
 
@@ -173,11 +175,6 @@ class LargeEX(SpellCard):
 		self.spawn3 =		[OVERLAX-40,0]
 		self.timepos = 		(OVERLAX/2-20,5)
 
-		self.ctime = 		float(pygame.time.get_ticks())/1000
-		self.last_time = 	self.ctime
-		# self.ctime = self.timer.getTimePassed()
-
-		# del self.spellBKG
 		self.spellBKG = loadImage("SpellBKG.png",fail_size=OVERSIZE)
 
 		self.drops = {'p':0,'p':1,'s':0,'p':0}
@@ -191,17 +188,42 @@ class LargeEX(SpellCard):
 
 			name_size = fontObj.render(self.name,True,BLACK).get_width()
 			pos = (OVERLAX-(name_size+5),10)
-			# self.dispName(pos)
 
 			self.ctime = float(pygame.time.get_ticks())/1000
 
-			if self.ctime - self.last_time >= 0.3:
-				b2 = circleShot(self.spawn2,(5,5),self.playerb)
-				b = circleShot(self.spawn3,(-5,5),self.playerb)
-
-				self.last_time = self.ctime
+			#Every half a second...
+			if self.ctime - self.last_time >= 0.5:
+				#Spawn bullets from all four corners, forming an 'X' shape
+				b2 = 	circleShot(self.spawn2,(5,5),self.playerb)
+				b = 	circleShot(self.spawn3,(-5,5),self.playerb)
 
 				self.ownerGroup.add(b)
 				self.ownerGroup.add(b2)
+
+				#Spawn a circle of 10 bullets, radiating out from the owner
+				amount = 	10
+				speed = 	5
+				ownerPos = 	self.owner.getCenterPos()
+
+				x = circleSpawn(ownerPos,amount,speed,circleShot,self.playerb)
+				for i in x:
+					self.ownerGroup.add(i)
+
+				self.last_time = self.ctime
+
+class PlayerBomb(SpellCard):
+	def __init__(self,owner,ownerGroup,name):
+		'''Since player spellcards differ greatly from those of boss's, players require their own special spellcard class.'''
+		SpellCard.__init__(self,0,name,owner,ownerGroup,playerb=True)
+
+	def runCard(self):
+		owner.makeGod()
+
+		if self.running:
+			self.Card()
+
+	def Card(self):
+		''''''
+		pass
 
 nuclear = u'\u2622'

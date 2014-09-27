@@ -23,6 +23,7 @@ class Spritey(pygame.sprite.Sprite):
 		# print self.pos
 
 		self.image = pygame.Surface((10,10),pygame.SRCALPHA,32)
+		self.sprite= self.image
 
 		######Rectangular hitbox of sprite######
 		self.rect = 	self.image.get_rect()
@@ -40,6 +41,30 @@ class Spritey(pygame.sprite.Sprite):
 		self.showHB = False
 
 		self.bulletGroup = pygame.sprite.Group()
+
+	def getSprite(self):
+		'''Return the current sprite being used.'''
+		return self.sprite
+
+	def getImage(self):
+		'''Return the image being displayed on-screen.'''
+		return self.image
+
+	def setSprite(self,newSprite):
+		'''Set the current sprite to the Surface object newSprite.'''
+		self.sprite = newSprite
+
+	def getCenterPos(self,newSurface=None):
+		'''Get the position in the center of the displayed sprite (A.K.A: self.image).'''
+		if not newSurface:
+			centerx = surf_center(self.image)[0] + self.rect.x
+			centery = surf_center(self.image)[1] + self.rect.y
+		else:
+			centerx = surf_center(self.image,newSurface)[0] + self.rect.x
+			centery = surf_center(self.image,newSurface)[0] + self.rect.y
+
+		center = [centerx,centery]
+		return center
 
 	def shoot(self,group):
 		'''Generic sprite shooting.

@@ -48,5 +48,6 @@ P_DEATH_S = 	loadSound("playerdeath.ogg")
 PICKUP_S = 		loadSound("pickup.ogg")
 LIFE_UP_S = 	loadSound("lifeup.ogg")
 BOMB_UP_S = 	loadSound("bombup.ogg")
+TICK_S = 		loadSound("tick.ogg")
 
 nuclear = u'\u2622'

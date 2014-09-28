@@ -11,11 +11,14 @@ def getSetting(setting):
 		return ConfigSettings[setting]
 	except BaseException as e:
 		if isDebugInit():
-			logging("Attempted to access setting: " + setting + ", but no such setting was found.","err")
+			logging("Attempted to access setting: '" + setting + "', but no such setting was found.","err")
 		else:
-			print "Attempted to access setting: " + setting + ", but no such setting was found."
+			print "Attempted to access setting: '" + setting + "', but no such setting was found."
 
 		return ""
+
+def getAllSettings():
+	return ConfigSettings
 
 ConfigSettings,error = configReader()
 

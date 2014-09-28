@@ -18,6 +18,11 @@ unlogged = [] #This is for files that have yet to be logged
 
 messageQueue = {} #messagetype:message1|[message2]
 
+def getDate():
+	now = datetime.now()
+	date_stamp = "-".join([str(now.year)[2:],str(now.month),str(now.day)])
+	return date_stamp
+
 def genLogName(logEveryRun=False,newName=""):
 	'''	Generate a log file name that has been timestamped with the date.
 		logEveryRun <- Whether to make a new log file everytime genLogName is run, or simply return the last log file used on this date

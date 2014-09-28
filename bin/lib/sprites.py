@@ -276,12 +276,14 @@ class Player(Spritey):
 
 	def graze(self,group):
 		'''Add points if grazing bullets.'''
-		for i in group.sprites():
-			if i.gRect.colliderect(self.rect) and not i.rect.colliderect(self.rect) and not i.grazed:
-				#For some reason, graze points are increasing by two
-				self.grazep += 1
-				i.grazed = True
-				self.score += 100
+		if not self.isDead:
+			for i in group.sprites():
+				if i.gRect.colliderect(self.rect) and not i.rect.colliderect(self.rect) and not i.grazed:
+					#For some reason, graze points are increasing by two
+					self.grazep += 1
+					i.grazed = True
+					self.score += 100
+					playSound(TICK_S)
 
 		return 0
 

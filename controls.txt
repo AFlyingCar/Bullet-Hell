@@ -26,6 +26,8 @@ Valid key commands:
 Force error -> e
 Force quit  -> w
 God mode 	-> g
+Save		-> s
+	Screenshot
 Show bullet -> h
 	hitboxes
 Volume less -> , or <

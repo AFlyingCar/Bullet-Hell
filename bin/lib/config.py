@@ -42,14 +42,8 @@ def configParser(text):
 			try:
 				var_val = i.split("=",1)
 
-				if var_val[0].endswith(" "):
-					var_val[0] = var_val[0].strip()
-
-				if var_val[1].startswith(" "):
-					var_val[1] = var_val[1].strip()
-				
-				if var_val[1].startswith("\t"):
-					var_val[1] = var_val[1].lstrip()
+				var_val[0] = var_val[0].strip()
+				var_val[1] = var_val[1].strip()
 
 				if var_val[1].startswith('"') or var_val[1].startswith("'"):
 					r = var_val[1][1:-1]

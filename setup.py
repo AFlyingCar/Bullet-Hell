@@ -13,7 +13,7 @@ def zipdir(path,zip):
 			zip.write(os.path.join(root,file))
 			print os.path.join(root,file)
 
-includes = ['bin\\','thcut.dat','license.txt','README.md','config.cfg']
+includes = ['bin\\','thcut.dat','license.txt','README.md','config.cfg','controls.txt']
 packages = ["os","pygame","pygame.locals","random","sys","urllib2","traceback","ctypes"]
 excludes = ["tkinter"]
 

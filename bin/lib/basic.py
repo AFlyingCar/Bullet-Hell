@@ -14,11 +14,11 @@ s_init_check = getSetting('checkMixerInit') # <- Whether to check for an initial
 
 def takeScreenShot(surface,path=getSetting('path_screenshot')):
 	# filename = genLogName(newName=)
-	i = 1
+	a = 1
 	for i in os.listdir(path):
-		if i.startswith("ScreenShot") and i.endswith(".bmp"): i += 1
+		if i.startswith("ScreenShot") and i.endswith(".bmp"): a += 1
 
-	filename = "ScreenShot-(" + str(i) + ").bmp"
+	filename = "ScreenShot-(" + str(a) + ").bmp"
 	filename = os.path.join(path,filename)
 
 	pygame.image.save(surface,filename)

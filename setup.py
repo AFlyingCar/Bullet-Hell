@@ -7,13 +7,25 @@ from datetime import datetime
 now = datetime.now()
 fileName = '_'.join(["build","-".join([str(now.month),str(now.day),str(now.year)[2:]])])
 
-def zipdir(path,zip):
+def zipdir(path,newZip):
 	for root,dirs,files in os.walk(path):
 		for file in files:
-			zip.write(os.path.join(root,file))
+			newZip.write(os.path.join(root,file))
 			print os.path.join(root,file)
 
-includes = ['bin\\','thcut.dat','license.txt','README.md','config.cfg','controls.txt']
+lib_path = os.path.join(os.getcwd(),'bin','lib')
+libraries = []
+
+print lib_path
+for i in os.listdir(lib_path):
+	if i.endswith('.pyc'):
+		x = os.path.join('bin','lib',i)
+		libraries.append(x)
+		print x
+
+includes = ['bin\\Images','bin\\Sound','bin\\Music','bin\\Anim\\','bin\\Fonts\\','bin\\Music\\',
+'thcut.dat','license.txt','README.md','config.cfg','controls.txt'] + libraries
+
 packages = ["os","pygame","pygame.locals","random","sys","urllib2","traceback","ctypes"]
 excludes = ["tkinter"]
 

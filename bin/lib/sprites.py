@@ -293,9 +293,9 @@ class Player(Spritey):
 			self.score += item.sscore
 			self.pointColl += 1
 
-		elif type(item) == Powerup:
+		elif type(item) == (smallPowerUp or bigPowerUp):
 			if self.getPower() != "MAX":
-				self.score += item.pscore
+				self.power += item.pscore
 			else:
 				logging("NOT COLLECTING POWER","test")
 				return False
@@ -391,24 +391,34 @@ class boss(Spritey):
 
 		drops = self.spells[self.spell].getDrops()
 
-		# for i in self.pwr:
-		for item,size in drops.iteritems():
+		for item in drops:
 			newPos = (random.randint(self.rect.x-20,self.rect.x+20),self.rect.y)
 
-			if item == 'p': 	d = Powerup(self.pos[0],self.pos[1],newPos,size)
-			elif item == 's': 	d = PointItem(self.pos[0],self.pos[1],newPos)
-			elif item == 'l': 	d = Lifeup(self.pos[0],self.pos[1],newPos)
-			elif item == 'b': 	d = Bombup(self.pos[0],self.pos[1],newPos)
+			if item == 'p1': 	
+				d = smallPowerUp(newPos)
+				dropList.append(d)
+			elif item == 'p2':
+				d = bigPowerUp(newPos)
+				dropList.append(d)
+			elif item == 's': 	
+				d = PointItem(self.pos[0],self.pos[1],newPos)
+				dropList.append(d)
+			elif item == 'l': 	
+				d = Lifeup(self.pos[0],self.pos[1],newPos)
+				dropList.append(d)
+			elif item == 'b': 	
+				d = Bombup(self.pos[0],self.pos[1],newPos)
+				dropList.append(d)
 
-			else:				logging("Invalid item token '" + i + "'", "err")
+			else: logging("Invalid item token '" + item + "'", "err")
 
-			dropList.append(d)
 
 		for d in dropList:
-			if type(d) == 	Powerup: 	powerGroup.add(d)
-			elif type(d) == PointItem: 	scoreGroup.add(d)
-			elif type(d) == Lifeup: 	lifeGroup.add(d)
-			elif type(d) == Bombup: 	bombupGroup.add(d)
+			if type(d) is 	smallPowerUp or type(d) is bigPowerUp:
+				powerGroup.add(d)
+			elif type(d) == PointItem: 						scoreGroup.add(d)
+			elif type(d) == Lifeup: 						lifeGroup.add(d)
+			elif type(d) == Bombup: 						bombupGroup.add(d)
 			else: logging("[Unknown item: "+ str(type(d)) +"]","err")
 
 	def StartBossFight(self):
@@ -605,30 +615,41 @@ class StarPointItem(Item):
 		Item.__init__(self,num,STAR_POINT_IMG)
 		self.sscore = 1000
 
-class Powerup(Item):
-	def __init__(self,x,y,num,size):
-
-		if size < 0 or size > 1:
-			logging("Incorrect size for Powerup item!")
-			# print "Incorrect size!"
-			return None
-
-		self.pscore = (size*10)
-
-		if self.pscore <= 0: self.pscore = 1
-
-		if size is 0: 	img = POWER0_IMG
-		else: 			img = POWER1_IMG
-
-		Item.__init__(self,num,img)
-
+class smallPowerUp(Item):
+	def __init__(self,pos):
+		Item.__init__(self,pos,POWER0_IMG)
+		self.pscore = 5
 
 	def idle(self,player):
+		if self.rect.colliderect(player.coll_Rect) and not player.getPower() == "MAX":
+			self.followRect(player.rect)
+
+		if pygame.sprite.spritecollide(self,playerGroup,False):
+			collected = player.collect(self)
+
+			if collected:
+				self.setLife(-1)
+
 		if self.life <= 0:
 			self.kill()
 
+class bigPowerUp(Item):
+	def __init__(self,pos):
+		Item.__init__(self,pos,POWER1_IMG)
+		self.pscore = 10
+
+	def idle(self,player):
 		if self.rect.colliderect(player.coll_Rect) and not player.getPower() == "MAX":
 			self.followRect(player.rect)
+
+		if pygame.sprite.spritecollide(self,playerGroup,False):
+			collected = player.collect(self)
+
+			if collected:
+				self.setLife(-1)
+
+		if self.life <= 0:
+			self.kill()
 
 class Lifeup(Item):
 	def __init__(self,x,y,num):

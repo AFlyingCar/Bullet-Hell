@@ -20,6 +20,8 @@
 'Fix game crashing when final spell timer runs out'						#COMPLETE
 'Fix the order in which sprites get rendered first'						#COMPLETE
 'Add custom boss idle methods'											#COMPLETE
+'Bullet Patterns'														#COMPLETE
+'Fix powerup items not being collected by the player.'					#COMPLETE
 
 'Add grazing mechanics' 												#Nearly Complete (Still grazing when hit)
 'Add spell-timer'														#Nearly Complete (Timer runs a bit slow for some reason: probably FPS)
@@ -36,12 +38,10 @@
 'Add more comments to everything'										#INCOMPLETE
 'Have characters "talk" (sprite cutins)'								#INCOMPLETE
 'Create proper images/backgrounds'										#INCOMPLETE
-'Bullet Patterns'														#INCOMPLETE
 'Fix Player bomb'														#INCOMPLETE (Bomb completely broken, will probably need to rework entirely)
 'Clean-up/re-write boss and player code'								#INCOMPLETE (boss timer crashes game on last life, players[current_playr] bomb broken. Code for both is a mess and should just be re-written)
 'Fix duplicate point and graze bug'										#INCOMPLETE (pointColl gets + 2, graze sometimes adds 2 instead of 1)
 'Fix player hitbox appearing at the beginning of the game'				#INCOMPLETE
-'Fix powerup items not being collected by the player.'					#INCOMPLETE
 
 'Add system flags'														#Irrelavent
 
@@ -180,9 +180,9 @@ if getSetting('full_life'):
 	# Give player max life (10 hearts)
 	players[current_playr].setLife(players[current_playr].maxLife)
 
-if getSetting('enable_music'):
-	mus = bosses[current_boss].getMusic()
-	playMusic(mus,getSetting("musicVolume"))
+# if getSetting('enable_music'):
+mus = bosses[current_boss].getMusic()
+playMusic(mus,getSetting("musicVolume"))
 
 logging("Music has been " + ('enabled at ' + str(getSetting('musicVolume')) + ' volume.' if getSetting('enable_music') else 'disabled.'),"std")
 

@@ -30,7 +30,7 @@ class Spritey(pygame.sprite.Sprite):
 		self.rect.x = 	self.pos[0]
 		self.rect.y = 	self.pos[1]
 
-		self.spritePos = [0,0]
+		self.spritePos = [0,0,0]
 
 		self.life = 	life
 		self.maxLife = 	life
@@ -45,6 +45,14 @@ class Spritey(pygame.sprite.Sprite):
 	def getSprite(self):
 		'''Return the current sprite being used.'''
 		return self.sprite
+
+	def getSpriteWidth(self):
+		'''Return the width of the sprite'''
+		return self.sprite.get_width()
+
+	def getSpriteHeight(self):
+		'''Return the height of the sprite'''
+		return self.sprite.get_height()
 
 	def getImage(self):
 		'''Return the image being displayed on-screen.'''

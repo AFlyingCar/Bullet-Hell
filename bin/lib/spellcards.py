@@ -44,7 +44,7 @@ class SpellCard(object):
 
 		self.newMax = newMaxLife
 
-		self.drops = {"p":0}
+		self.drops = ["p1"]
 
 		self.running = False
 
@@ -177,7 +177,13 @@ class LargeEX(SpellCard):
 
 		self.spellBKG = loadImage("SpellBKG.png",fail_size=OVERSIZE)
 
-		self.drops = {'p':0,'p':1,'s':0,'p':0}
+		# self.drops = {'p1':0,'p2':0,'s':0,'p2':0}
+		self.drops = ['p1','p2','s','p2']
+
+		#EXPERIMENTAL: Events that can be triggered upon something either happening or changing in the environment
+		self.event1 = 0
+		self.event2 = 0
+		self.event2_run = 0
 
 	def Card(self):
 		if self.start:
@@ -199,8 +205,12 @@ class LargeEX(SpellCard):
 
 				self.ownerGroup.add(b)
 				self.ownerGroup.add(b2)
+				self.last_time = self.ctime
 
-				#Spawn a circle of 10 bullets, radiating out from the owner
+				self.event1 += 1
+
+			if self.event1 >= 2:
+				#Spawn a circle of 10 bullets, radiating out from the owner every 1 second
 				amount = 	10
 				speed = 	5
 				ownerPos = 	self.owner.getCenterPos()
@@ -209,7 +219,24 @@ class LargeEX(SpellCard):
 				for i in x:
 					self.ownerGroup.add(i)
 
-				self.last_time = self.ctime
+				self.event1 = 0
+				self.event2 += 1
+
+			if self.event2 >= 3:
+				#Spawn 2 rows of bullets that travel downwards every 3 seconds
+				xsize = self.ownerGroup.sprites()[0].getSpriteWidth() + 10
+				ypos = OVERLAY/2
+
+				amount = int(OVERLAX/xsize)
+
+				shift = 20
+
+				for i in reversed(xrange(amount)):
+					pos = [xsize*i + shift,ypos]
+					b = circleShot(pos,(0,2),self.playerb)
+					self.ownerGroup.add(b)
+
+				self.event2 = 0
 
 class PlayerBomb(SpellCard):
 	def __init__(self,owner,ownerGroup,name):

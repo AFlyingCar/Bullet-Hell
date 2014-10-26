@@ -9,13 +9,13 @@ from bullets import *
 from basic import *
 import math
 
-def circleSpawn(spawnpos,amount,speed,newBullet,playerb=False):
+def squareSpawn(spawnpos,amount,speed,newBullet,playerb=False):
 	'''Spawn a newBullet in an evenly spaced circular, radiating pattern whose speed is the list speed.'''
 	bulls = []
 	for b in range(amount):
 		deg = 360*((1.0/amount)*(b+1))
 
-		nextLoc =       pointOnCircle(spawnpos,deg)
+		nextLoc =       pointOnSquare(spawnpos,deg)
 		direction =     newSpeed(spawnpos,nextLoc)
 
 		for i in direction:
@@ -24,7 +24,11 @@ def circleSpawn(spawnpos,amount,speed,newBullet,playerb=False):
 
 		bulls.append(newBullet(spawnpos,direction,playerb))
 
-		# print bulls
+	return bulls
+
+def circleSpawn(spawnpos,amount,speed,newBullet,degShift=1,playerb=False):
+	points = 	pointsOnCircle(amount,spawnpos,degShift)
+	bulls = 	[newBullet(spawnpos,(p[0]*speed,p[1]*speed),playerb) for p in points]
 
 	return bulls
 

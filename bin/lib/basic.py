@@ -169,13 +169,16 @@ def loadMusic(filename,volume=1.0):
 		logging("Directory -> " + path + " does not exist!", "err")
 
 def playMusic(filename,volume=1.0):
-	s = loadMusic(filename,volume)
+	if getSetting('enable_music'):
+		s = loadMusic(filename,volume)
 
-	if s:
-		pygame.mixer.music.play(-1)
-		logging("Successfully playing " + filename, "std")
+		if s:
+			pygame.mixer.music.play(-1)
+			logging("Successfully playing " + filename, "std")
+		else:
+			logging("An error has occurred when loading music: " + filename + ".", "err")
 	else:
-		logging("An error has occurred when loading music: " + filename + ".", "err")
+		logging("Music has not been enabled!","warn","Cannot play music file: " + str(filename))
 
 def isPlaying(sound=None):
 	'''Return whether or not sound is currently playing.'''
@@ -434,7 +437,7 @@ def runIdle(sprites={}):
 		args = sprites[sprite]
 		sprite.idle(*args)
 
-def pointOnCircle(center,deg,radius=1):
+def pointOnSquare(center,deg,radius=1):
 	x = center[0]
 	y = center[1]
 
@@ -446,13 +449,53 @@ def pointOnCircle(center,deg,radius=1):
 
 	return [x2,y2]
 
+def pointOnCircle(deg,center):
+	x = math.sin(math.radians(deg))
+	y = math.cos(math.radians(deg))
+
+	return [x,y]
+
+def pointsOnCircle(amount,center,degShift=1):
+	points = []
+
+	degs = [(360/amount)*i for i in range(amount)]
+
+	for d in degs:
+		points.append(pointOnCircle(d*degShift,center))
+
+	return points
+
 def newSpeed(start, end):
 	dx = float(start[0]) - float(end[0])
 	dy = float(start[1]) - float(end[1])
 
-	dx = round(dx)
-	dy = round(dy)
-
 	return [dx, dy]
+
+def verify_files():
+	master_url = getSetting('MASTER_URL')
+	logging("Downloading file list...","std")
+	print master_url + "MANIFEST.MF"
+	files = urllib2.urlopen(master_url + "MANIFEST.MF").read()
+	logging("Writing file list to MANIFEST.MF...","std")
+	open("MANIFEST.MF","w").write(files)
+
+	files = files.split("\n")
+
+	for i in files:
+		index = files.index(i)
+		files[index] = os.path.join(os.getcwd(),i)
+
+	for path,name,filename in os.walk(os.getcwd()):
+		if os.path.join(os.getcwd(),filename) in files:
+			files.remove(filename)
+
+	logging("Writing ")
+	for f in files:
+		url = master_url + f.split(os.getcwd())[1]
+		print url
+		data = urllib.urlopen(url).read()
+		open(f,'wb').write(data)
+
+	print files
 
 nuclear = u'\u2622'

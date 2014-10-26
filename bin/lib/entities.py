@@ -7,13 +7,12 @@ from globalVar import *
 from constants import *
 from sprites import *
 from players import *
-from enemies import *
+from bosses  import *
 
 ##########
 # PLAYER #
 ##########
 
-# player = Player([posx,OVERLAY-5],speed,PLAYER1_IMG,2)
 player = Alraune([posx,OVERLAY-5])
 playerGroup.add(player)
 
@@ -25,12 +24,6 @@ playerGroup.add(player)
 # Note: Setting it to a negative integer means an instant win
 boss = VivianJames([posx,40],life=100,lives=3)
 bossGroup.add(boss)
-
-###########
-# ENEMIES #
-###########
-
-#Enemies haven't been implemented yet, but they will be instantiated here. 
 
 for s in bossGroup.sprites():
 	all_sprites.add(s)

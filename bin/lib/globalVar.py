@@ -53,6 +53,7 @@ bombupGroup =	pygame.sprite.Group()
 itemGroup = 	pygame.sprite.Group()
 
 playerGroup = 	pygame.sprite.Group()
+enemyGroup =	pygame.sprite.Group()
 bossGroup = 	pygame.sprite.Group()
 all_sprites =	pygame.sprite.Group()
 

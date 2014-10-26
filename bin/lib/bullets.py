@@ -43,15 +43,15 @@ class Bullet(Spritey):
 		pass
 
 class circleShot(Bullet):
-	def __init__(self,num,speed,playerb=False):
-		Bullet.__init__(self,num,BULL2,speed,playerb=playerb)
+	def __init__(self,pos,speed,playerb=False):
+		Bullet.__init__(self,pos,BULL2,speed,playerb=playerb)
 
 class needleShot(Bullet):
-	def __init__(self,num,speed,playerb=False):
-		Bullet.__init__(self,num,BULL1,speed,playerb=playerb)
+	def __init__(self,pos,speed,playerb=False):
+		Bullet.__init__(self,pos,BULL1,speed,playerb=playerb)
 
 class genericLaser(Bullet):
-	def __init__(self,num,img,playerb=False):
-		bullet.__init__(self,num,img,speed=0,playerb=playerb)
+	def __init__(self,pos,img,playerb=False):
+		bullet.__init__(self,pos,img,speed=0,playerb=playerb)
 
 nuclear = u'\u2622'

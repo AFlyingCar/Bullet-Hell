@@ -97,7 +97,7 @@ def infoPrint(str_info,data_info):
 		loc = str_info.index(i)
 
 		x = i + str(data_info[loc])
-		m = fontObj.render(x,True,WHITE)
+		m = fontObj.render(x,True,BLACK)
 
 		if i == "Player":
 			ppos = list(n)
@@ -120,7 +120,7 @@ def infoPrint(str_info,data_info):
 		n = (n[0],n[1]+new_info[1].get_height() + 10)
 
 	x = "POWER: " + str(players[current_playr].getPower())
-	i = fontObj.render(x,True,WHITE)
+	i = fontObj.render(x,True,BLACK)
 	screen.blit(i,n)
 
 	symbol(players[current_playr].life,LIFE_IMG,ppos,screen)
@@ -167,6 +167,7 @@ prgname = getSetting('prg_name') + " " + getSetting('game_version')
 pygame.display.set_caption(prgname)
 overlay.fill(WHITE)
 
+screen.blit(S_BKG,(0,0))
 screen.blit(overlay,OVERPOS)
 
 bosses = 	bossGroup.sprites()
@@ -229,11 +230,19 @@ while True:
 
 				# print type(str(pygame.mixer.music.get_volume()))
 				log_string = (
-					"PLAYER LIFE=" + str(players[current_playr].life) + ": BOMBING=" + str(players[current_playr].bombing) + ": GOD=" + 
-					str(players[current_playr].god) + ": POSITION=" + str(players[current_playr].getPos()) + 
-					"\nBOSS LIFE=" + str(bosses[current_boss].life) + ": LIVES=" + str(bosses[current_boss].lives) + 
-					": POSITION=" + str(bosses[current_boss].getPos()) + "\nMUSIC VOLUME: " + str(pygame.mixer.music.get_volume()) + ":" + 
-					("ON" if getSetting("enable_music") else "OFF"))
+					"PLAYER\n======" + 
+					"\nLIFE=" + str(players[current_playr].life) + 
+					"\nBOMBING=" + str(players[current_playr].bombing) +
+					"\nGOD=" + str(players[current_playr].god) + 
+					"\nPOSITION=" + str(players[current_playr].getPos()) + 
+					"\n\nBOSS\n====" + 
+					"\nLIFE=" + str(bosses[current_boss].life) + 
+					"\nLIVES=" + str(bosses[current_boss].lives) + 
+					"\nPOSITION=" + str(bosses[current_boss].getPos()) + 
+					"\nCENTERPOS=" + str(bosses[current_boss].getCenterPos()) +
+					"\n\nMISC\n====" + 
+					"\nMUSIC VOLUME:" + ("ON" if getSetting("enable_music") else "OFF") + "=" + str(pygame.mixer.music.get_volume())
+				)
 
 				print log_string
 
@@ -278,6 +287,9 @@ while True:
 
 			if event.key == K_s and ctrl_hold:
 				takeScreenShot(screen)
+
+			if event.key == K_f and ctrl_hold:
+				players[current_playr].setPower("max")
 
 			collide = False
 			

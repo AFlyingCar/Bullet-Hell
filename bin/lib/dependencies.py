@@ -14,7 +14,7 @@ from pygame.mixer import init
 ########
 LIFE_IMG = 		loadImage("img-79.png")
 BOMB_IMG = 		loadImage("img-78.png")
-LIFE_UP_IMG = 	loadImage("img_1-up.png")
+LIFE_UP_IMG = 	loadImage("img_lifeup.png")
 SCORE_IMG = 	loadImage("img_score.png")
 BOMB_UP_IMG = 	loadImage("img_bomb-up.png")
 STARPOINT_IMG = loadImage("img_starpoint.png")
@@ -23,6 +23,11 @@ POWER1_IMG = 	loadImage("img_power-1.png")
 S_BKG = 		loadImage("img-s_bkg.png")
 PLAYER1_IMG = 	loadImage("player.png")
 BOSS11_IMG = 	loadImage("Boss-1.png")
+
+	#########
+	#Enemies#
+	#########
+FAIRY1_IMG = 	loadImage("img_fairy-1.png")
 
 	#########
 	#Bullets#

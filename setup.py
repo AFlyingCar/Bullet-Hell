@@ -23,13 +23,15 @@ for i in os.listdir(lib_path):
 		libraries.append(x)
 		print x
 
-includes = ['bin\\Images','bin\\Sound','bin\\Music','bin\\Anim\\','bin\\Fonts\\','bin\\Music\\',
+binary_includes = ['bin\\Images','bin\\Sound','bin\\Music','bin\\Anim\\','bin\\Fonts\\','bin\\Music\\',
 'thcut.dat','license.txt','README.md','config.cfg','controls.txt'] + libraries
+
+source_includes = ['bin\\','launcher.py','thcut.dat','license.txt','README.md','config.cfg','controls.txt']
 
 packages = ["os","pygame","pygame.locals","random","sys","urllib2","traceback","ctypes"]
 excludes = ["tkinter"]
 
-build_exe_options = {"packages":packages,"excludes":excludes,"include_files":includes}
+build_exe_options = {"packages":packages,"excludes":excludes,"include_files":binary_includes}
 
 base = None
 if sys.platform == "win32":
@@ -48,7 +50,7 @@ if not os.path.exists(fileName):
 else:
 	zipf = zipfile.ZipFile(fileName + '\\src.zip','w')
 
-for i in includes:
+for i in source_includes:
 	zipdir(i,zipf)
 
 	if not i.endswith("\\"):

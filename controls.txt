@@ -19,13 +19,14 @@ ENTER
 
 KEYCOMMANDS
 ===========
-To activate key commands, hold down the Control key, and then press a valid key to activate the command.
+To activate key commands, hold down the Control key (CTRL), and then press a valid key to activate the command.
 
 Valid key commands:
 ===================
 Force error -> e
 Force quit  -> w
 God mode 	-> g
+Full Power	-> f
 Save		-> s
 	Screenshot
 Show bullet -> h

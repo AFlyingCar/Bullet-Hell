@@ -334,7 +334,96 @@ class Player(Spritey):
 		logging("Toggling sprite visiblity...","std","Player is now " + ("visible" if not self.visible else "invisible"))
 		self.visible = not self.visible
 
-class boss(Spritey):
+class Enemy(Spritey):
+	def __init__(self,pos,img,life=4):
+		'''Base Enemy class.
+		pos 	<- (x,y)						<-- starting position
+		img 	<-	string or surface object	<--	sprite to use
+		life=4	<- 	integer 					<-- Starting life. 100 by default.
+		'''
+		Spritey.__init__(self,pos,life=life)
+
+		self.image = loadImage(img)
+
+		self.maxLife = life
+
+		self.rect = self.image.get_rect()
+		self.rect.x = self.pos[0]
+		self.rect.y = self.pos[1]
+
+		self.last_time = pygame.time.get_ticks()
+
+		self.drops = []
+
+	def dropItem(self):
+		'''Drop collectable items'''
+		dropList = []
+
+		drops = self.drops
+
+		for item in drops:
+			newPos = (random.randint(self.rect.x-20,self.rect.x+20),self.rect.y)
+
+			if item == 'p1': 	
+				d = smallPowerUp(newPos)
+				dropList.append(d)
+			elif item == 'p2':
+				d = bigPowerUp(newPos)
+				dropList.append(d)
+			elif item == 's': 	
+				d = PointItem(self.pos[0],self.pos[1],newPos)
+				dropList.append(d)
+			elif item == 'l': 	
+				d = Lifeup(self.pos[0],self.pos[1],newPos)
+				dropList.append(d)
+			elif item == 'b': 	
+				d = Bombup(self.pos[0],self.pos[1],newPos)
+				dropList.append(d)
+
+			else: logging("Invalid item token '" + item + "'", "err")
+
+
+		for d in dropList:
+			if type(d) is 	smallPowerUp or type(d) is bigPowerUp:
+				powerGroup.add(d)
+			elif type(d) == PointItem: 						scoreGroup.add(d)
+			elif type(d) == Lifeup: 						lifeGroup.add(d)
+			elif type(d) == Bombup: 						bombupGroup.add(d)
+			else: logging("[Unknown item: "+ str(type(d)) +"]","err")
+
+	def shoot(self):
+		'''Shoot method that is to be customized for each sprite.'''
+		pass
+
+	def idle(self):
+		'''Custom idle method.'''
+		self.kill()
+		self.shoot()
+		self.update()
+		self.uponDeath()
+
+	def kill(self):
+		if self.life < 0:
+			self.dropItem()
+			self.isDead = True
+
+class Fairy(Enemy):
+	def __init__(self,pos,img,life,shoot_pattern):
+		'''shoot_pattern is a function that is called during the Fairy's shoot method.'''
+		Enemy.__init__(pos,img,life=life)
+
+		self.pattern = shoot_pattern
+
+	def shoot(self,args=[]):
+		'''Customizable shooting method.'''
+		self.pattern(*args)
+
+	def update(self):
+		'''Update position based on speed.'''
+		self.rect.x += self.speed[0]
+		self.rect.y += self.speed[1]
+
+class boss(Enemy):
 	def __init__(self,num,img,music,life=100,lives=1):
 		'''Base boss class.
 		num 		<- (x,y) 					<-- starting position
@@ -342,7 +431,7 @@ class boss(Spritey):
 		life=100 	<- integer 					<-- Starting life. 100 by default. [this may be deprecated]
 		lives=1 	<- integer 					<-- Maximum amount of lives the boss has. 1 by default
 		'''
-		Spritey.__init__(self,num,life=life)
+		Enemy.__init__(self,num,img,life=life)
 		self.lives = lives
 		self.spellFont = fontObj
 
@@ -351,16 +440,7 @@ class boss(Spritey):
 		spell1 = SpellCard(10000,"",self,self.bulletGroup)
 		self.spells = [spell1]
 
-		self.image = loadImage(img)
-
-		self.rect = self.image.get_rect()
-		self.rect.x = self.pos[0]
-		self.rect.y = self.pos[1]
-
-		self.maxLife = life
 		self.maxLives = lives
-
-		self.last_time = pygame.time.get_ticks()
 
 		self.clife = 0
 
@@ -495,21 +575,6 @@ class boss(Spritey):
 			self.timesRun += 1
 			for b in self.bulletGroup.sprites():
 				b.kill()
-
-			self.rect.x = overlay.get_width()+10
-			self.rect.y = overlay.get_height()+10
-
-			x =    fontObj.render('YOU WIN!',True,BLACK)
-			pos =  surf_center(overlay,x)
-
-			overlay.blit(x,pos)
-
-			if self.timesRun <= 1:
-				stopMusic()
-
-			if not isPlaying():
-				mus = getSetting('enable_music')
-				if mus: playMusic("th00_03.ogg")
 
 			self.endBossFight()
 

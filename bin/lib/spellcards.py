@@ -6,12 +6,14 @@
 import pygame
 
 from basic import *
+from enemies import *
 from bullets import *
 from timerv2 import *
 from fontlib import *
 from patterns import *
 from globalVar import *
 from constants import *
+from dependencies import *
 
 class SpellCard(object):
 	def __init__(self,time,name,owner,ownerGroup,playerb=False,newMaxLife=1000):
@@ -44,7 +46,7 @@ class SpellCard(object):
 
 		self.newMax = newMaxLife
 
-		self.drops = ["p1"]
+		self.drops = ["p1","p2","l","s","b"]
 
 		self.running = False
 
@@ -167,6 +169,32 @@ class SpellCard(object):
 		'''Return the amount of time left on the spellcard's timer as a float.'''
 		self.timer.getTimeLeft()
 
+class servantSpawn(SpellCard):
+	def __init__(self,owner,ownerGroup,playerb=False):
+		SpellCard.__init__(self,40000,"LifeLong Servitude: Mystical Beasts",owner,ownerGroup,playerb=playerb,newMaxLife=1000)
+
+		self.spellBKG = loadImage("SpellBKG.png",fail_size=OVERSIZE)
+		self.timepos = 	(OVERLAX/2-20,5)
+
+		self.drops = ['p2','p2','p2','p2','s','s','s']
+
+		self.event1 = 0
+
+	def Card(self):
+		if self.start:
+			name_size = fontObj.render(self.name,True,BLACK).get_width()
+			pos = (OVERLAX-(name_size+5),10)
+
+			if not event1:
+				newPos = [surf_center(overlay,self.owner.image)[0],10]
+				self.changeOwnerPos(5,newPos)
+				self.owner.speed = [0,0]
+			else:
+				if self.ctime - self.last_time >= 1:
+					for i in (0,1):
+						s = Fairy1((i*OVERLAX-FAIRY1_IMG.get_width(),OVERLAY/2),life=20)
+						self.owner.servants.append(s)
+
 class LargeEX(SpellCard):
 	def __init__(self,owner,ownerGroup,playerb=False):
 		SpellCard.__init__(self,30000,"Large X: Generic Danmaku",owner,ownerGroup,playerb=playerb,newMaxLife=1500)
@@ -178,7 +206,7 @@ class LargeEX(SpellCard):
 		self.spellBKG = loadImage("SpellBKG.png",fail_size=OVERSIZE)
 
 		# self.drops = {'p1':0,'p2':0,'s':0,'p2':0}
-		self.drops = ['p1','p2','s','p2']
+		self.drops = ['p2','p2','s','p2']
 
 		#EXPERIMENTAL: Events that can be triggered upon something either happening or changing in the environment
 		self.event1 = 0
@@ -215,7 +243,7 @@ class LargeEX(SpellCard):
 				speed = 	5
 				ownerPos = 	self.owner.getCenterPos()
 
-				x = circleSpawn(ownerPos,amount,speed,circleShot,self.playerb)
+				x = circleSpawn(ownerPos,amount,speed,circleShot,playerb=self.playerb)
 				for i in x:
 					self.ownerGroup.add(i)
 

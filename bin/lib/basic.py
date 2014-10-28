@@ -63,6 +63,28 @@ def loadAnim(animName):
 
 	return frames
 
+def loadFont(filename,size):
+	'''Load a font from file.'''
+	if type(filename)==pygame.font.Font: return filename
+	
+	path = os.path.join(getSetting('path_font'),filename)
+
+	if os.path.exists(path):
+		# Check to see if they have supplied a specific font first...
+		logging("Successfully loaded " + filename,"std")
+		return pygame.font.Font(path,size)
+
+	else:
+		try:
+			# Maybe they are requesting a system font...
+			x = pygame.font.Font(filename,size)
+			logging("Successfully loaded " + filename,"std")
+			return x
+
+		except IOError:
+			logging("Path: " + path + " does not exist!","err")
+			return None
+
 ######Load sounds from ./Sound and returns an error if the file was not found,
 ###### or if pygame.mixer was not initialized
 def loadSound(filename,volume=1.0):

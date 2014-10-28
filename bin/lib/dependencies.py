@@ -3,12 +3,14 @@
 # Dependencies
 # Image and sound dependencies
 
-from basic import loadImage,loadSound,loadAnim,sprite_sheet
+from basic import loadImage,loadSound,loadAnim,loadFont,sprite_sheet
+from debugger import logging
 from pygame.mixer import init
 
 #We load images and sounds before-hand so that less memory is used up trying to constantly reference
 # the image/sound files
 
+logging("Initializing images...","std")
 ########
 #IMAGES#
 ########
@@ -46,6 +48,7 @@ P_DEATH_ANIM = sprite_sheet((64,64),"explosion\\explosion1.png",pos=(0,0))
 # loadSound doesn't ask the user for confirmation to continue
 init(frequency=22050, size=-16, buffer=500)
 
+logging("Initializing sounds...","std")
 ########
 #SOUNDS#
 ########
@@ -54,5 +57,12 @@ PICKUP_S = 		loadSound("pickup.ogg")
 LIFE_UP_S = 	loadSound("lifeup.ogg")
 BOMB_UP_S = 	loadSound("bombup.ogg")
 TICK_S = 		loadSound("tick.ogg")
+
+logging("Initializing fonts...","std")
+#######
+#FONTS#
+#######
+FONT_THSPATIAL = loadFont("THSpatial.ttf",29)
+FONT_FREESANS_B = loadFont("freesansbold.ttf",29)
 
 nuclear = u'\u2622'

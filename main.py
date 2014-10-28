@@ -68,7 +68,7 @@ def updateScreen(BKG,bkg_override=None):
 	screen.blit(overlay,OVERPOS)
 
 	infoPrint(def_info,info)
-	fpsPrint(fps,OVERSIZE,fontObj,screen)
+	fpsPrint(fps,OVERSIZE,FONT_THSPATIAL,screen)
 
 	pygame.display.update()
 
@@ -97,7 +97,7 @@ def infoPrint(str_info,data_info):
 		loc = str_info.index(i)
 
 		x = i + str(data_info[loc])
-		m = fontObj.render(x,True,BLACK)
+		m = FONT_THSPATIAL.render(x,True,BLACK)
 
 		if i == "Player":
 			ppos = list(n)
@@ -120,11 +120,32 @@ def infoPrint(str_info,data_info):
 		n = (n[0],n[1]+new_info[1].get_height() + 10)
 
 	x = "POWER: " + str(players[current_playr].getPower())
-	i = fontObj.render(x,True,BLACK)
+	i = FONT_THSPATIAL.render(x,True,BLACK)
 	screen.blit(i,n)
 
 	symbol(players[current_playr].life,LIFE_IMG,ppos,screen)
 	symbol(players[current_playr].bombs,BOMB_IMG,bpos,screen)
+
+def infoPrint2(info,font,color=BLACK,dist=10):
+	#Info Position
+	pos = (OVERPOS[0]+10 + OVERLAX,50)
+	boxes = []
+
+	for s,d in info:
+		if not s.endswith(" "): s += " "
+
+		header = font.render(s,True,color)
+
+		if type(d) != pygame.Surface:
+			data = font.render(str(d),True,color)
+		
+		else: data = d
+
+		if type(d) == pygame.Surface: pass
+
+		textbox = pygame.Surface()
+
+		boxes.append(textbox)
 
 def cutin(bosss,players,stage):
 	'''bosss and players are cutin images.'''
@@ -389,7 +410,7 @@ while True:
 
 		players[current_playr].life = 0
 
-		x = fontObj.render('YOU LOSE!',True,BLACK)
+		x = FONT_THSPATIAL.render('YOU LOSE!',True,BLACK)
 		overlay.blit(x,surf_center(overlay,x))
 		# messages[x] = surf_center(overlay,x)
 
@@ -404,7 +425,7 @@ while True:
 		players[current_playr].graze(bosses[current_boss].bulletGroup)
 
 		if players[current_playr].playerbomb:
-			players[current_playr].bomb(fontObj,overlay,bombBullet,bosses[current_boss].bulletGroup)
+			players[current_playr].bomb(FONT_THSPATIAL,overlay,bombBullet,bosses[current_boss].bulletGroup)
 		else:
 			players[current_playr].playerbomb = False
 
@@ -424,6 +445,15 @@ while True:
 			"",
 			players[current_playr].grazep,
 			"/".join([str(players[current_playr].pointColl),str(players[current_playr].maxPointColl)])]
+
+	info2 = {
+			"HI-Score: ":HI,
+			"Score: ":players[current_playr].score,
+			"Player":LIFE_IMG,
+			"Bomb":BOMB_IMG,
+			"Graze: ":players[current_playr].grazep,
+			"Point: ":"/".join([str(players[current_playr].pointColl),str(players[current_playr].maxPointColl)])
+			}
 	
 	runIdle(sprites={players[current_playr]:[],bosses[current_boss]:[]})
 	updateScreen(S_BKG,bkg_override=bkg_override)

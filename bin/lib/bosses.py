@@ -25,7 +25,7 @@ class VivianJames(boss):
 			self.rect.x = overlay.get_width()+10
 			self.rect.y = overlay.get_height()+10
 
-			x =    fontObj.render('YOU WIN!',True,BLACK)
+			x =    FONT_THSPATIAL.render('YOU WIN!',True,BLACK)
 			pos =  surf_center(overlay,x)
 
 			overlay.blit(x,pos)

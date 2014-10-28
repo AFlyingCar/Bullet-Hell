@@ -120,7 +120,7 @@ if __name__ == "__main__":
 	pygame.display.set_caption("timer")
 
 	display.fill(WHITE)
-	fontObj = pygame.font.Font('freesansbold.ttf',29)
+	FONT_THSPATIAL = pygame.font.Font('freesansbold.ttf',29)
 
 	myTimer = Timer(30000)
 	myTimer.startTimer()
@@ -144,8 +144,8 @@ if __name__ == "__main__":
 				if event.key == K_LEFT:   pos[0] -= 1
 				if event.key == K_RIGHT:  pos[0] += 1
 
-		myTimer.dispTime((0,0),fontObj,display,cutoff=1)
-		myTimer.dispTime((640/2,480/2),fontObj,display,cutoff=1,count=0)
+		myTimer.dispTime((0,0),FONT_THSPATIAL,display,cutoff=1)
+		myTimer.dispTime((640/2,480/2),FONT_THSPATIAL,display,cutoff=1,count=0)
 		myTimer.stopTimer()
 
 		pygame.draw.circle(display,BLACK,pos,5)

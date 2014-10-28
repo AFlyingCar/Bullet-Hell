@@ -101,11 +101,11 @@ class SpellCard(object):
 
 	def dispName(self,pos,color=BLACK):
 		'''Display the spellcard name on the overlay.'''
-		name = 		wrapline(self.name,fontObj,overlay,pos)
+		name = 		wrapline(self.name,FONT_THSPATIAL,overlay,pos)
 		ystart = 	pos[1]
 
 		for n in name:
-			namee = fontObj.render(n,True,color)
+			namee = FONT_THSPATIAL.render(n,True,color)
 
 			overlay.blit(namee,(pos[0],ystart))
 			ystart += namee.get_height()
@@ -114,7 +114,7 @@ class SpellCard(object):
 		'''Default idle method. Can be overwritten for custom content.'''
 		self.runCard() #Run spellcard
 
-		self.renderInfo(self.timepos,overlay,fontObj) #Render name and time
+		self.renderInfo(self.timepos,overlay,FONT_THSPATIAL) #Render name and time
 
 		return self.spellBKG #Return the custom background of the spellcard
 
@@ -182,7 +182,7 @@ class servantSpawn(SpellCard):
 
 	def Card(self):
 		if self.start:
-			name_size = fontObj.render(self.name,True,BLACK).get_width()
+			name_size = FONT_THSPATIAL.render(self.name,True,BLACK).get_width()
 			pos = (OVERLAX-(name_size+5),10)
 
 			if not event1:
@@ -220,7 +220,7 @@ class LargeEX(SpellCard):
 			self.changeOwnerPos(5,newPos)
 			self.owner.speed = [0,0]
 
-			name_size = fontObj.render(self.name,True,BLACK).get_width()
+			name_size = FONT_THSPATIAL.render(self.name,True,BLACK).get_width()
 			pos = (OVERLAX-(name_size+5),10)
 
 			self.ctime = float(pygame.time.get_ticks())/1000

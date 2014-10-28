@@ -100,7 +100,7 @@ class Player(Spritey):
 
 		#5 large red orbs rain from above. Once all have hit the ground, a large white laser shoots up the middle ofthe screen.
 		name = "Origin Sign: Red Rain"
-		name = fontObj.render(name,True,BLACK)
+		name = FONT_THSPATIAL.render(name,True,BLACK)
 
 		if name not in messages:
 			namepos = (0, overlay.get_height()-(name.get_height()+5))
@@ -147,7 +147,10 @@ class Player(Spritey):
 			# l = laser(x,y,start,1,'img_laser1.png',[0,0],playerb=True)
 			# bombBullet.add(l)
 
-		# return fontObj.render(name,True,BLACK)
+		# return FONT_THSPATIAL.render(name,True,BLACK)
+
+	def addBomb(self,bomb):
+		self.bombs += bomb
 
 	def setFocus(self,shift):
 		'''Toggle focus mode'''
@@ -289,7 +292,7 @@ class Player(Spritey):
 
 	def collect(self,item):
 		'''What to do when collecting items.'''
-		if type(item) == PointItem:
+		if type(item) == PointItem or type(item) == StarPointItem:
 			self.score += item.sscore
 			self.pointColl += 1
 
@@ -304,7 +307,7 @@ class Player(Spritey):
 			self.addLife(1)
 
 		elif type(item) == Bombup:
-			self.bombs += 1
+			self.addBomb(1)
 
 		playSound(item.sound,getSetting("soundVolume"))
 
@@ -314,7 +317,7 @@ class Player(Spritey):
 		'''What to do when the player dies.'''
 		if self.isDead:
 			self.timesRun += 1
-			x = fontObj.render('YOU LOSE!',True,BLACK)
+			x = FONT_THSPATIAL.render('YOU LOSE!',True,BLACK)
 			overlay.blit(x,surf_center(overlay,x))
 
 			self.speed = 0
@@ -433,7 +436,7 @@ class boss(Enemy):
 		'''
 		Enemy.__init__(self,num,img,life=life)
 		self.lives = lives
-		self.spellFont = fontObj
+		self.spellFont = FONT_THSPATIAL
 
 		self.spell = 0
 

@@ -20,7 +20,6 @@ fps = 		pygame.time.Clock()
 overlay = 	pygame.Surface(OVERSIZE)
 screen = 	pygame.display.set_mode(SCREEN_SIZE)
 talks = 	open("thcut.dat",'r').read().split("NBOSS")
-fontObj =	pygame.font.Font(os.path.join(font_path,'THSpatial.ttf'),29)
 
 direction2 = 	[0,0]
 collide =		False
